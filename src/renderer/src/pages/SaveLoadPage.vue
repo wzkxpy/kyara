@@ -28,7 +28,7 @@ const emit = defineEmits<{ back: [] }>()
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(124, 140, 255, 0.2);
+  border-bottom: 1px solid rgba(84, 104, 255, 0.18);
 }
 
 .header h1 {
@@ -38,7 +38,7 @@ const emit = defineEmits<{ back: [] }>()
 
 .header button {
   appearance: none;
-  border: 1px solid rgba(124, 140, 255, 0.4);
+  border: 1px solid rgba(84, 104, 255, 0.34);
   border-radius: 999px;
   background: transparent;
   color: var(--text-primary);
