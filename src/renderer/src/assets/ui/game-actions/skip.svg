@@ -1,21 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="88" height="44" viewBox="0 0 88 44" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
   <defs>
-    <linearGradient id="bg" x1="10" y1="4" x2="78" y2="40" gradientUnits="userSpaceOnUse">
+    <linearGradient id="bg" x1="6" y1="5" x2="38" y2="39" gradientUnits="userSpaceOnUse">
       <stop stop-color="#FFFFFF" stop-opacity="0.94"/>
       <stop offset="1" stop-color="#EEF0FF" stop-opacity="0.9"/>
     </linearGradient>
-    <linearGradient id="shine" x1="12" y1="6" x2="76" y2="34" gradientUnits="userSpaceOnUse">
+    <linearGradient id="shine" x1="7" y1="7" x2="37" y2="34" gradientUnits="userSpaceOnUse">
       <stop stop-color="#FFFFFF" stop-opacity="0.9"/>
       <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
-    <filter id="shadow" x="0" y="0" width="88" height="44" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="shadow" x="0" y="0" width="44" height="44" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#5468FF" flood-opacity="0.16"/>
     </filter>
   </defs>
-  <rect x="1.5" y="1.5" width="85" height="41" rx="13" fill="url(#bg)" stroke="#8A98FF" stroke-width="1.5" filter="url(#shadow)"/>
-  <rect x="3" y="3" width="82" height="18" rx="10" fill="url(#shine)" opacity="0.72"/>
-  <circle cx="19" cy="22" r="10" fill="#5468FF" fill-opacity="0.1" stroke="#8A98FF"/>
-  <text x="19" y="26" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="700" fill="#5468FF">>></text>
-  <text x="36" y="25" font-family="Microsoft YaHei, Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#1F2430">快进</text>
-  <path d="M7 34H81" stroke="#5468FF" stroke-opacity="0.14" stroke-linecap="round"/>
+  <rect x="1.5" y="1.5" width="41" height="41" rx="13" fill="url(#bg)" stroke="#8A98FF" stroke-width="1.5" filter="url(#shadow)"/>
+  <path d="M14 14v16l12-8zM28 14v16l8-8z" fill="#5468FF"/>
 </svg>

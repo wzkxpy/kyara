@@ -1,22 +1,45 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import DialogueBox from '@renderer/components/DialogueBox.vue'
+import DialogueHistoryOverlay from '@renderer/components/HistoryOverlay.vue'
 import GameActionBar from '@renderer/components/ActionBar.vue'
 import { useAppSettings } from '@renderer/composables/useAppSettings'
 import avatarImage from '../../../../resources/images/characters/avatar-example.svg'
 
 // 游戏界面
-const emit = defineEmits<{ history: []; settings: [] }>()
+const emit = defineEmits<{ settings: [] }>()
 
-// 右键和关闭按钮共用同一套显示状态切换
+// 对话历史 overlay 显示状态
+const isHistoryVisible = ref(false)
+
+// 对话框显隐规则：右键或关闭按钮隐藏；隐藏后左键和右键均可重新显示
 const isDialogueVisible = ref(true)
 const toggleDialogueVisibility = (): void => {
   isDialogueVisible.value = !isDialogueVisible.value
 }
 
+const handleLeftClick = (event: MouseEvent): void => {
+  // 操作栏按钮自身有功能，左键不应再触发对话框显隐
+  if (event.target instanceof Element && event.target.closest('.game-action-root')) {
+    return
+  }
+  // 隐藏状态下左键重新显示
+  if (!isDialogueVisible.value) {
+    isDialogueVisible.value = true
+  }
+}
+
+const handleWheel = (event: WheelEvent): void => {
+  // 对话框可见时上滑滚轮打开历史记录 overlay
+  if (isDialogueVisible.value && event.deltaY < 0) {
+    openHistory()
+  }
+}
+
 const handleContextMenu = (event: MouseEvent): void => {
   event.preventDefault()
-  toggleDialogueVisibility()
+  // 可见状态下右键隐藏；隐藏状态下右键重新显示
+  isDialogueVisible.value = !isDialogueVisible.value
 }
 
 // Esc 只负责隐藏，隐藏状态下不会再次显示
@@ -34,9 +57,14 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
 })
 
+// 打开历史记录时临时隐藏对话框层，关闭后按原显隐状态恢复
+const openHistory = (): void => {
+  isHistoryVisible.value = true
+}
+
 const handleAction = (key: string): void => {
   if (key === 'history') {
-    emit('history')
+    openHistory()
   }
 
   if (key === 'settings') {
@@ -53,22 +81,27 @@ const { settings } = useAppSettings()
 </script>
 
 <template>
-  <main class="page" @contextmenu="handleContextMenu">
+  <main class="page" @click="handleLeftClick" @wheel="handleWheel" @contextmenu="handleContextMenu">
     <section class="placeholder">
       <p>游戏界面占位</p>
     </section>
 
     <footer class="dialogue-layer">
-      <div v-show="isDialogueVisible" class="dialogue-stack">
+      <div v-show="isDialogueVisible && !isHistoryVisible" class="dialogue-stack">
         <DialogueBox
           speaker-name="示例角色"
           :avatar="avatarImage"
           :show-avatar="settings.showAvatar"
-          text="这里是说话内容区域。右键点击界面可以隐藏对话框，再次右键点击可以重新显示。"
+          text="这里是说话内容区域。右键点击界面可以隐藏对话框，隐藏后点击左键或右键都可以重新显示。"
         />
-        <GameActionBar class="action-bar" @action="handleAction" />
+        <GameActionBar
+          :interactive="isDialogueVisible && !isHistoryVisible"
+          @action="handleAction"
+        />
       </div>
     </footer>
+
+    <DialogueHistoryOverlay :open="isHistoryVisible" @close="isHistoryVisible = false" />
   </main>
 </template>
 
@@ -102,10 +135,5 @@ const { settings } = useAppSettings()
   flex-direction: column;
   align-items: stretch;
   gap: 0.55rem;
-}
-
-.action-bar {
-  align-self: flex-end;
-  max-width: 100%;
 }
 </style>

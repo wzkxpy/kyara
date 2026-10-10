@@ -3,12 +3,11 @@ import { ref } from 'vue'
 import HomeView from './pages/HomePage.vue'
 import GameView from './pages/GamePage.vue'
 import GalleryView from './pages/GalleryPage.vue'
-import DialogueHistoryView from './pages/DialogueHistoryPage.vue'
 import SavesView from './pages/SaveLoadPage.vue'
 import SettingsView from './pages/SettingsPage.vue'
 
 // 当前界面状态
-type Screen = 'home' | 'game' | 'gallery' | 'history' | 'saves' | 'settings'
+type Screen = 'home' | 'game' | 'gallery' | 'saves' | 'settings'
 const currentScreen = ref<Screen>('home')
 const settingsFromHome = ref(false)
 
@@ -32,13 +31,8 @@ const openSettingsFromGame = (): void => {
     @gallery="currentScreen = 'gallery'"
     @settings="openSettingsFromHome"
   />
-  <GameView
-    v-else-if="currentScreen === 'game'"
-    @history="currentScreen = 'history'"
-    @settings="openSettingsFromGame"
-  />
+  <GameView v-else-if="currentScreen === 'game'" @settings="openSettingsFromGame" />
   <GalleryView v-else-if="currentScreen === 'gallery'" @back="currentScreen = 'home'" />
-  <DialogueHistoryView v-else-if="currentScreen === 'history'" @back="currentScreen = 'game'" />
   <SavesView v-else-if="currentScreen === 'saves'" @back="currentScreen = 'home'" />
   <SettingsView
     v-else-if="currentScreen === 'settings'"

@@ -28,6 +28,7 @@ const props = withDefaults(
 const emit = defineEmits<{ game: []; home: [] }>()
 const { settings, isLoading, errorMessage, updateSetting, resetSettings } = useAppSettings()
 const isResetConfirmOpen = ref(false)
+const isHomeConfirmOpen = ref(false)
 
 const updateSelectSetting = <K extends 'displayMode' | 'skipMode'>(
   key: K,
@@ -53,13 +54,29 @@ const confirmResetSettings = async (): Promise<void> => {
   isResetConfirmOpen.value = false
 }
 
-// 从游戏进入设置时，右键任意位置返回游戏
-const handleContextMenu = (event: MouseEvent): void => {
+// 从游戏进入设置时，返回标题画面需要二次确认
+const requestReturnHome = (): void => {
   if (props.fromHome) {
+    emit('home')
     return
   }
 
+  isHomeConfirmOpen.value = true
+}
+
+const confirmReturnHome = (): void => {
+  isHomeConfirmOpen.value = false
+  emit('home')
+}
+
+// 右键返回来源页面：从主页进入返回主页，从游戏进入返回游戏
+const handleContextMenu = (event: MouseEvent): void => {
   event.preventDefault()
+  if (props.fromHome) {
+    emit('home')
+    return
+  }
+
   emit('game')
 }
 </script>
@@ -275,16 +292,22 @@ const handleContextMenu = (event: MouseEvent): void => {
         恢复默认设置
       </button>
       <button v-if="!fromHome" type="button" @click="emit('game')">回到游戏</button>
-      <button type="button" @click="emit('home')">返回标题画面</button>
+      <button type="button" @click="requestReturnHome">返回标题画面</button>
     </footer>
 
     <ConfirmDialog
       :open="isResetConfirmOpen"
-      title="恢复默认设置"
-      message="确定要恢复默认设置吗？"
+      message="确认要恢复默认设置吗？"
       danger
       @confirm="confirmResetSettings"
       @cancel="isResetConfirmOpen = false"
+    />
+
+    <ConfirmDialog
+      :open="isHomeConfirmOpen"
+      message="确认要返回标题画面吗？"
+      @confirm="confirmReturnHome"
+      @cancel="isHomeConfirmOpen = false"
     />
   </main>
 </template>

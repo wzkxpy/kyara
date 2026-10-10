@@ -2,7 +2,6 @@
 withDefaults(
   defineProps<{
     open: boolean
-    title: string
     message: string
     danger?: boolean
   }>(),
@@ -18,24 +17,18 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
   <Teleport to="body">
     <Transition name="confirm-fade">
       <div v-if="open" class="confirm-overlay" role="presentation" @click.self="emit('cancel')">
-        <section class="confirm-dialog" role="dialog" aria-modal="true" :aria-label="title">
-          <header class="confirm-header">
-            <h2>{{ title }}</h2>
-          </header>
-
-          <div class="confirm-body">
-            <p>{{ message }}</p>
-          </div>
+        <section class="confirm-dialog" role="dialog" aria-modal="true" :aria-label="message">
+          <h2 class="confirm-message">{{ message }}</h2>
 
           <footer class="confirm-footer">
-            <button type="button" class="cancel-button" @click="emit('cancel')">取消</button>
+            <button type="button" class="cancel-button" @click="emit('cancel')">否</button>
             <button
               type="button"
               class="confirm-button"
               :class="{ danger }"
               @click="emit('confirm')"
             >
-              确认
+              是
             </button>
           </footer>
         </section>
@@ -67,24 +60,12 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
     0 2px 8px rgba(84, 104, 255, 0.12);
 }
 
-.confirm-header {
-  padding: 1.1rem 1.35rem 0.25rem;
-}
-
-.confirm-header h2 {
+.confirm-message {
   margin: 0;
+  padding: 1.35rem 1.35rem 0.85rem;
+  text-align: center;
   font-size: 1.1rem;
   color: var(--text-primary);
-}
-
-.confirm-body {
-  padding: 0.35rem 1.35rem 1.25rem;
-  color: var(--text-secondary);
-}
-
-.confirm-body p {
-  margin: 0;
-  line-height: 1.7;
 }
 
 .confirm-footer {

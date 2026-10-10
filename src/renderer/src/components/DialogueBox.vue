@@ -14,7 +14,10 @@
 </template>
 
 <script setup lang="ts">
-import dialogueBoxImage from '@renderer/assets/dialogue-box.png'
+import { resolveUiAsset } from '@renderer/lib/uiAssets'
+
+// 对话框框体通过 UI 资源槽位解析
+const dialogueBoxImage = resolveUiAsset('dialog.box')
 
 withDefaults(
   defineProps<{

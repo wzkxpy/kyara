@@ -37,8 +37,7 @@ const confirmQuit = (): void => {
 
     <ConfirmDialog
       :open="isQuitConfirmOpen"
-      title="结束游戏"
-      message="确定要退出游戏吗？"
+      message="确认要结束游戏吗？"
       danger
       @confirm="confirmQuit"
       @cancel="isQuitConfirmOpen = false"

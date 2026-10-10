@@ -7,6 +7,7 @@ export interface AppSettings {
 
   interruptSpeech: boolean // 翻页时中断语音
   showAvatar: boolean // 对话框显示角色头像
+  actionBarPinned: boolean // 固定对话框操作栏
 
   masterVolume: number // 主音量
   musicVolume: number // 音乐音量
@@ -22,6 +23,7 @@ export const defaultAppSettings: AppSettings = {
   dialogOpacity: 0.8,
   interruptSpeech: false,
   showAvatar: true,
+  actionBarPinned: true,
   masterVolume: 1,
   musicVolume: 1,
   voiceVolume: 1,

@@ -6,4 +6,5 @@ out
 *.log*
 
 docs
+resources
 AGENTS.md
