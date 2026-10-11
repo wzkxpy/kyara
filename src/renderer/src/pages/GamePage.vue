@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, reactive } from 'vue'
+import GameScreen from '@renderer/components/GameScreen.vue'
 import DialogueBox from '@renderer/components/DialogueBox.vue'
 import DialogueHistoryOverlay from '@renderer/components/HistoryOverlay.vue'
 import GameActionBar from '@renderer/components/ActionBar.vue'
 import { useAppSettings } from '@renderer/composables/useAppSettings'
 import avatarImage from '../../../../resources/images/characters/avatar-example.svg'
+
+import type { ScriptCommand } from '@shared/types/script'
+import { Runtime } from '@renderer/engine/runtime'
+import { initState } from '@renderer/engine/state'
+
+import script from '../../../../resources/scripts/chap01.json'
+
+const state = reactive(initState())
+
+const runtime = new Runtime(script.commands as ScriptCommand[], state)
 
 // 游戏界面
 const emit = defineEmits<{ settings: [] }>()
@@ -23,9 +34,13 @@ const handleLeftClick = (event: MouseEvent): void => {
   if (event.target instanceof Element && event.target.closest('.game-action-root')) {
     return
   }
-  // 隐藏状态下左键重新显示
+  // 对话框隐藏状态下左键重新显示
   if (!isDialogueVisible.value) {
     isDialogueVisible.value = true
+  }
+  // 对话框可见状态下左键点击执行下一条命令
+  else {
+    runtime.advance()
   }
 }
 
@@ -33,6 +48,10 @@ const handleWheel = (event: WheelEvent): void => {
   // 对话框可见时上滑滚轮打开历史记录 overlay
   if (isDialogueVisible.value && event.deltaY < 0) {
     openHistory()
+  }
+  // 对话框可见时下滑滚轮执行下一条命令
+  if (isDialogueVisible.value && event.deltaY > 0) {
+    runtime.advance()
   }
 }
 
@@ -42,19 +61,28 @@ const handleContextMenu = (event: MouseEvent): void => {
   isDialogueVisible.value = !isDialogueVisible.value
 }
 
-// Esc 只负责隐藏，隐藏状态下不会再次显示
 const handleKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape' && isDialogueVisible.value) {
+  // 对话历史 overlay 可见状态下按 Esc 关闭 overlay
+  if (isHistoryVisible.value && event.key === 'Escape') {
+    isHistoryVisible.value = false
+  }
+  // 对话框可见状态下按 Esc 隐藏对话框
+  else if (event.key === 'Escape' && isDialogueVisible.value) {
     isDialogueVisible.value = false
+  }
+  // 对话框可见状态下按空格或回车执行下一条命令
+  if (isDialogueVisible.value && (event.key === ' ' || event.key === 'Enter')) {
+    runtime.advance()
   }
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('keydown', handleKeydown) // 按键事件监听
+  runtime.advance() // 进入游戏后立即执行第一条命令
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('keydown', handleKeydown) // 移除按键事件监听
 })
 
 // 打开历史记录时临时隐藏对话框层，关闭后按原显隐状态恢复
@@ -82,17 +110,15 @@ const { settings } = useAppSettings()
 
 <template>
   <main class="page" @click="handleLeftClick" @wheel="handleWheel" @contextmenu="handleContextMenu">
-    <section class="placeholder">
-      <p>游戏界面占位</p>
-    </section>
+    <GameScreen :scene="state.scene" />
 
     <footer class="dialogue-layer">
       <div v-show="isDialogueVisible && !isHistoryVisible" class="dialogue-stack">
         <DialogueBox
-          speaker-name="示例角色"
+          :speaker-name="state.speaker"
           :avatar="avatarImage"
           :show-avatar="settings.showAvatar"
-          text="这里是说话内容区域。右键点击界面可以隐藏对话框，隐藏后点击左键或右键都可以重新显示。"
+          :text="state.text"
         />
         <GameActionBar
           :interactive="isDialogueVisible && !isHistoryVisible"
@@ -112,13 +138,6 @@ const { settings } = useAppSettings()
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-.placeholder {
-  flex: 1;
-  display: grid;
-  place-content: center;
-  color: var(--text-secondary);
 }
 
 .dialogue-layer {

@@ -21,7 +21,7 @@ const dialogueBoxImage = resolveUiAsset('dialog.box')
 
 withDefaults(
   defineProps<{
-    speakerName: string
+    speakerName: string | null
     avatar?: string
     text: string
     showAvatar?: boolean
