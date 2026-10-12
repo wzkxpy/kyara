@@ -2,7 +2,8 @@
 import type { AppSettings } from '@shared/types/settings'
 import { ref } from 'vue'
 import ConfirmDialog from '@renderer/components/ConfirmDialog.vue'
-import { useAppSettings } from '@renderer/composables/useAppSettings'
+import { storeToRefs } from 'pinia'
+import { useSettingsStore } from '@renderer/stores/settings'
 
 type NumberSettingKey =
   | 'textSpeed'
@@ -26,7 +27,9 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{ game: []; home: [] }>()
-const { settings, isLoading, errorMessage, updateSetting, resetSettings } = useAppSettings()
+const settingsStore = useSettingsStore()
+const { settings, isLoading, errorMessage } = storeToRefs(settingsStore)
+const { updateSetting, resetSettings } = settingsStore
 const isResetConfirmOpen = ref(false)
 const isHomeConfirmOpen = ref(false)
 

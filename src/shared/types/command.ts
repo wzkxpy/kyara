@@ -1,6 +1,6 @@
-// shared/types/script.ts
+// shared/types/command.ts
 
-export type ScriptCommand =
+export type Command =
   | { type: 'narration'; text: string }
   | { type: 'dialogue'; speaker: string; text: string; voice?: string }
   | { type: 'bg'; name: string }

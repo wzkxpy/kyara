@@ -1,4 +1,4 @@
-import type { ScriptCommand } from '../src/shared/types/script'
+import type { ScriptCommand } from '../src/shared/types/command'
 
 export class ScriptSyntaxError extends Error {
   constructor(

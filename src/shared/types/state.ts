@@ -15,7 +15,6 @@ export interface GameState {
 
   speaker: string | null
   text: string
-  voice: string | null
 
   finished: boolean
 }

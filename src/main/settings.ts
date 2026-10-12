@@ -15,14 +15,6 @@ export function getSettings(): Settings {
   return store.store
 }
 
-export function getSetting<K extends keyof Settings>(key: K): Settings[K] {
-  return store.get(key)
-}
-
-export function setSetting<K extends keyof Settings>(key: K, value: Settings[K]): void {
-  store.set(key, value)
-}
-
 export function setSettings(settings: Settings): Settings {
   store.store = settings
   return getSettings()

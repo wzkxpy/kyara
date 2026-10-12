@@ -4,18 +4,21 @@ import GameScreen from '@renderer/components/GameScreen.vue'
 import DialogueBox from '@renderer/components/DialogueBox.vue'
 import DialogueHistoryOverlay from '@renderer/components/HistoryOverlay.vue'
 import GameActionBar from '@renderer/components/ActionBar.vue'
-import { useAppSettings } from '@renderer/composables/useAppSettings'
+import { storeToRefs } from 'pinia'
+import { useSettingsStore } from '@renderer/stores/settings'
 import avatarImage from '../../../../resources/images/characters/avatar-example.svg'
 
-import type { ScriptCommand } from '@shared/types/script'
-import { Runtime } from '@renderer/engine/runtime'
-import { initState } from '@renderer/engine/state'
+import type { ScriptCommand } from '@shared/types/command'
+import { Runtime } from '@renderer/engine/Runtime'
+import { initState } from '@renderer/engine/GameState'
+import { AudioManager } from '@renderer/engine/AudioManager'
 
 import script from '../../../../resources/scripts/chap01.json'
 
-const state = reactive(initState())
+const gameState = reactive(initState())
 
-const runtime = new Runtime(script.commands as ScriptCommand[], state)
+const audioManager = new AudioManager((type, name) => `/resources/${type}/${name}.ogg`)
+const runtime = new Runtime(script.commands as ScriptCommand[], gameState, audioManager)
 
 // 游戏界面
 const emit = defineEmits<{ settings: [] }>()
@@ -105,20 +108,20 @@ const handleAction = (key: string): void => {
 }
 
 // 头像显示状态由全局设置控制
-const { settings } = useAppSettings()
+const { settings } = storeToRefs(useSettingsStore())
 </script>
 
 <template>
   <main class="page" @click="handleLeftClick" @wheel="handleWheel" @contextmenu="handleContextMenu">
-    <GameScreen :scene="state.scene" />
+    <GameScreen :scene="gameState.scene" />
 
     <footer class="dialogue-layer">
       <div v-show="isDialogueVisible && !isHistoryVisible" class="dialogue-stack">
         <DialogueBox
-          :speaker-name="state.speaker"
+          :speaker-name="gameState.speaker"
           :avatar="avatarImage"
           :show-avatar="settings.showAvatar"
-          :text="state.text"
+          :text="gameState.text"
         />
         <GameActionBar
           :interactive="isDialogueVisible && !isHistoryVisible"

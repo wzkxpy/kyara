@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { resolveUiAsset, type UiSlot } from '@renderer/lib/uiAssets'
-import { useAppSettings } from '@renderer/composables/useAppSettings'
+import { storeToRefs } from 'pinia'
+import { useSettingsStore } from '@renderer/stores/settings'
 
 type GameActionKey =
   | 'pinBar'
@@ -53,7 +54,8 @@ const actions: GameAction[] = (
 ).map(([key, label, slot]) => ({ key, label, slot, icon: resolveUiAsset(slot) }))
 
 // 操作栏自身管理固定、自动显隐和悬停提示
-const { settings, updateSetting } = useAppSettings()
+const settingsStore = useSettingsStore()
+const { settings } = storeToRefs(settingsStore)
 const isActionBarRevealed = ref(settings.value.actionBarPinned)
 const isActionBarPinned = ref(settings.value.actionBarPinned)
 const isPointerInRevealZone = ref(false)
@@ -101,7 +103,7 @@ const toggleActionBarPinned = (): void => {
   if (!nextPinned && !isPointerInRevealZone.value) {
     clearActionHint()
   }
-  void updateSetting('actionBarPinned', nextPinned)
+  void settingsStore.updateSetting('actionBarPinned', nextPinned)
 }
 
 const handleAction = (action: GameAction): void => {

@@ -8,7 +8,6 @@ export function initState(): GameState {
     characters: [],
     speaker: null,
     text: '',
-    voice: null,
     finished: false
   }
 }

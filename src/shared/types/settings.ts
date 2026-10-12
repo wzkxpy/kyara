@@ -1,4 +1,6 @@
-export interface AppSettings {
+// src/shared/types/settings.ts
+
+export interface Settings {
   displayMode: 'windowed' | 'fullscreen' // 窗口/全屏
   skipMode: 'readOnly' | 'all' // 快进 仅已读/全部
   textSpeed: number // 文本显示速度
@@ -15,7 +17,7 @@ export interface AppSettings {
   sfxVolume: number // 系统音效音量
 }
 
-export const defaultAppSettings: AppSettings = {
+export const defaultAppSettings: Settings = {
   displayMode: 'windowed',
   skipMode: 'readOnly',
   textSpeed: 1,
