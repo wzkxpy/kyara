@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AppSettings } from '@shared/types/settings'
+import type { Settings } from '@shared/types/settings'
 import { ref } from 'vue'
 import ConfirmDialog from '@renderer/components/ConfirmDialog.vue'
 import { storeToRefs } from 'pinia'
@@ -37,7 +37,7 @@ const updateSelectSetting = <K extends 'displayMode' | 'skipMode'>(
   key: K,
   event: Event
 ): Promise<void> => {
-  const value = (event.target as HTMLSelectElement).value as AppSettings[K]
+  const value = (event.target as HTMLSelectElement).value as Settings[K]
   return updateSetting(key, value)
 }
 

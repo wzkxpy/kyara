@@ -1,7 +1,5 @@
 import ElectronStore from 'electron-store'
-import { defaultAppSettings, type AppSettings } from '../shared/types/settings'
-
-export type Settings = AppSettings
+import { defaultAppSettings, type Settings } from '../shared/types/settings'
 
 // electron-store 是 ESM 包，兼容打包成 CommonJS 后的默认导出
 const Store =

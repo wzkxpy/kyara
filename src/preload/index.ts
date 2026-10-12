@@ -1,13 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import type { AppSettings } from '../shared/types/settings'
+import type { Settings } from '../shared/types/settings'
 
 // 渲染进程可用的自定义 API
 const api = {
   settings: {
-    get: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
-    set: (settings: AppSettings): Promise<AppSettings> =>
-      ipcRenderer.invoke('settings:set', settings)
+    get: (): Promise<Settings> => ipcRenderer.invoke('settings:get'),
+    set: (settings: Settings): Promise<Settings> => ipcRenderer.invoke('settings:set', settings)
   },
   app: {
     quit: (): void => ipcRenderer.send('app:quit')

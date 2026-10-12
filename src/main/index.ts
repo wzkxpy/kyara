@@ -2,11 +2,11 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { getSettings, setSettings } from './settings'
-import type { AppSettings } from '../shared/types/settings'
+import type { Settings } from '../shared/types/settings'
 import icon from '../../resources/icon.png?asset'
 
 // 应用全屏设置
-function applyDisplayMode(settings: AppSettings): void {
+function applyDisplayMode(settings: Settings): void {
   const targetWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
   targetWindow?.setFullScreen(settings.displayMode === 'fullscreen')
 }
@@ -68,7 +68,7 @@ app.whenReady().then(() => {
 
   // 全局设置读写接口
   ipcMain.handle('settings:get', () => getSettings())
-  ipcMain.handle('settings:set', (_event, settings: AppSettings) => {
+  ipcMain.handle('settings:set', (_event, settings: Settings) => {
     const nextSettings = setSettings(settings)
     applyDisplayMode(nextSettings)
     return nextSettings

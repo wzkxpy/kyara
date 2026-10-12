@@ -1,3 +1,5 @@
+// src/renderer/stores/settings.ts
+
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { defaultAppSettings, type Settings } from '@shared/types/settings'
@@ -11,9 +13,9 @@ export const useSettingsStore = defineStore('settings', () => {
   async function loadSettings(): Promise<void> {
     isLoading.value = true
     errorMessage.value = ''
-
     try {
-      settings.value = await window.api.settings.get()
+      const loadedSettings = await window.api.settings.get()
+      Object.assign(settings.value, loadedSettings)
     } catch {
       errorMessage.value = '读取设置失败'
     } finally {
@@ -21,13 +23,14 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
-  // 将完整设置整体写回主进程（非增量更新），并采用返回值覆盖本地状态
+  // 将完整设置整体写回主进程
   async function saveSettings(nextSettings: Settings): Promise<void> {
     isLoading.value = true
     errorMessage.value = ''
 
     try {
-      settings.value = await window.api.settings.set(nextSettings)
+      const savedSettings = await window.api.settings.set(nextSettings)
+      Object.assign(settings.value, savedSettings)
     } catch {
       errorMessage.value = '保存设置失败'
     } finally {
@@ -35,7 +38,7 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
-  // 更新单个设置项：展开当前设置、替换目标键后整体写回
+  // 更新单个设置项
   function updateSetting<K extends keyof Settings>(key: K, value: Settings[K]): Promise<void> {
     return saveSettings({
       ...settings.value,

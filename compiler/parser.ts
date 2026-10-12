@@ -1,4 +1,4 @@
-import type { ScriptCommand } from '../src/shared/types/command'
+import type { Command } from '../src/shared/types/command'
 
 export class ScriptSyntaxError extends Error {
   constructor(
@@ -10,9 +10,9 @@ export class ScriptSyntaxError extends Error {
   }
 }
 
-export function parse(source: string): ScriptCommand[] {
+export function parse(source: string): Command[] {
   let pendingVoice: string | null = null // 待处理的 @voice 指令
-  const commands: ScriptCommand[] = []
+  const commands: Command[] = []
   const lines = source.replace(/^\uFEFF/, '').split(/\r\n|\n|\r/)
 
   // 开始逐行解析脚本

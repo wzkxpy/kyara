@@ -1,3 +1,4 @@
+<!-- src/renderer/pages/HomePage.vue -->
 <script setup lang="ts">
 import { ref } from 'vue'
 import ConfirmDialog from '@renderer/components/ConfirmDialog.vue'

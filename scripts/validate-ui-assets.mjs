@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const assetsDir = join(dirname(fileURLToPath(import.meta.url)), '../src/renderer/src/assets')
+const assetsDir = join(dirname(fileURLToPath(import.meta.url)), '../src/renderer/assets')
 const manifest = JSON.parse(readFileSync(join(assetsDir, 'manifest.json'), 'utf8'))
 
 const manifestEntries = Object.entries(manifest)

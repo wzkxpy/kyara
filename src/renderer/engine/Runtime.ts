@@ -1,21 +1,21 @@
 import type { Command } from '@shared/types/command'
 import type { GameState } from '@shared/types/state'
 import type { AudioManager } from './AudioManager'
-import { useSettingsStore } from '@renderer/stores/settings'
+import type { Settings } from '@shared/types/settings'
 
 export class Runtime {
   constructor(
     private commands: Command[],
     private state: GameState,
-    private audio: AudioManager
+    private audio: AudioManager,
+    private settings: Settings
   ) {}
 
   advance(): void {
     if (this.state.finished) return
 
     // 根据设置决定翻页时是否打断语音
-    const settingsStore = useSettingsStore()
-    if (settingsStore.settings.interruptSpeech) {
+    if (this.settings.interruptSpeech) {
       this.audio.stopVoice()
     }
 

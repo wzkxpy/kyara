@@ -1,13 +1,13 @@
 import type { ElectronAPI } from '@electron-toolkit/preload'
-import type { AppSettings } from '../shared/types/settings'
+import type { Settings } from '../shared/types/settings'
 
 declare global {
   interface Window {
     electron: ElectronAPI
     api: {
       settings: {
-        get: () => Promise<AppSettings>
-        set: (settings: AppSettings) => Promise<AppSettings>
+        get: () => Promise<Settings>
+        set: (settings: Settings) => Promise<Settings>
       }
       app: {
         quit: () => void
