@@ -20,7 +20,7 @@ export interface Settings {
 export const defaultAppSettings: Settings = {
   displayMode: 'windowed',
   skipMode: 'readOnly',
-  textSpeed: 1,
+  textSpeed: 50,
   autoSpeed: 1,
   dialogOpacity: 0.8,
   interruptSpeech: false,

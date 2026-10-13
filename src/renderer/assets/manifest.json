@@ -1,14 +1,14 @@
 {
-  "dialog.box": "dialogue-box.png",
-  "action.pin-bar": "ui/game-actions/pin-bar.svg",
-  "action.quick-save": "ui/game-actions/quick-save.svg",
-  "action.quick-load": "ui/game-actions/quick-load.svg",
-  "action.save": "ui/game-actions/save.svg",
-  "action.load": "ui/game-actions/load.svg",
-  "action.history": "ui/game-actions/history.svg",
-  "action.auto": "ui/game-actions/auto.svg",
-  "action.skip": "ui/game-actions/skip.svg",
-  "action.voice-replay": "ui/game-actions/voice-replay.svg",
-  "action.settings": "ui/game-actions/settings.svg",
-  "action.close": "ui/game-actions/close.svg"
+  "dialog.box": "dialogue-box.svg",
+  "action.pin-bar": "game-actions/pin-bar.svg",
+  "action.quick-save": "game-actions/quick-save.svg",
+  "action.quick-load": "game-actions/quick-load.svg",
+  "action.save": "game-actions/save.svg",
+  "action.load": "game-actions/load.svg",
+  "action.history": "game-actions/history.svg",
+  "action.auto": "game-actions/auto.svg",
+  "action.skip": "game-actions/skip.svg",
+  "action.voice-replay": "game-actions/voice-replay.svg",
+  "action.settings": "game-actions/settings.svg",
+  "action.close": "game-actions/close.svg"
 }

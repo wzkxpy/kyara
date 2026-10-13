@@ -1,3 +1,4 @@
+<!-- src/renderer/pages/SettingsPage.vue -->
 <script setup lang="ts">
 import type { Settings } from '@shared/types/settings'
 import { ref } from 'vue'
@@ -49,7 +50,6 @@ const updateBooleanSetting = (key: BooleanSettingKey, event: Event): Promise<voi
   return updateSetting(key, (event.target as HTMLInputElement).checked)
 }
 
-const formatSpeed = (value: number): string => value.toFixed(1)
 const formatPercent = (value: number): string => `${Math.round(value * 100)}%`
 
 const confirmResetSettings = async (): Promise<void> => {
@@ -133,14 +133,14 @@ const handleContextMenu = (event: MouseEvent): void => {
           <div class="range-control">
             <input
               type="range"
-              min="0.5"
-              max="3"
-              step="0.1"
+              min="1"
+              max="100"
+              step="1"
               :value="settings.textSpeed"
               :disabled="isLoading"
               @input="updateNumberSetting('textSpeed', $event)"
             />
-            <span class="range-value">{{ formatSpeed(settings.textSpeed) }}</span>
+            <span class="range-value">{{ settings.textSpeed }}</span>
           </div>
         </div>
 
@@ -151,14 +151,14 @@ const handleContextMenu = (event: MouseEvent): void => {
           <div class="range-control">
             <input
               type="range"
-              min="0.5"
-              max="3"
-              step="0.1"
+              min="1"
+              max="100"
+              step="1"
               :value="settings.autoSpeed"
               :disabled="isLoading"
               @input="updateNumberSetting('autoSpeed', $event)"
             />
-            <span class="range-value">{{ formatSpeed(settings.autoSpeed) }}</span>
+            <span class="range-value">{{ settings.autoSpeed }}</span>
           </div>
         </div>
 

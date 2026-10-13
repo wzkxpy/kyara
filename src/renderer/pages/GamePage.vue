@@ -23,13 +23,20 @@ const emit = defineEmits<{ settings: [] }>()
 const isHistoryVisible = ref(false) // 历史记录 overlay 显示状态
 const isDialogueVisible = ref(true) // 对话框显示状态
 
+// 对话框组件引用
+const dialogueBoxRef = ref<InstanceType<typeof DialogueBox> | null>(null)
+
 const toggleDialogueVisibility = (): void => {
   isDialogueVisible.value = !isDialogueVisible.value
 }
 
-// 推进剧情
+// 推进剧情：正在逐字显示时先补全文字，否则进入下一条剧情
 const advance = (): void => {
-  if (isHistoryVisible.value) return
+  const dialogueBox = dialogueBoxRef.value
+  if (dialogueBox?.isTyping) {
+    dialogueBox.finish()
+    return
+  }
   session.advance()
 }
 
@@ -45,9 +52,10 @@ const handleLeftClick = (event: MouseEvent): void => {
   // 对话框隐藏时左键重新显示
   if (!isDialogueVisible.value) {
     isDialogueVisible.value = true
-  } else {
-    advance()
+    return
   }
+
+  advance()
 }
 
 const handleWheel = (event: WheelEvent): void => {
@@ -65,7 +73,8 @@ const handleWheel = (event: WheelEvent): void => {
 const handleContextMenu = (event: MouseEvent): void => {
   event.preventDefault()
   if (isHistoryVisible.value) return
-  isDialogueVisible.value = !isDialogueVisible.value
+
+  toggleDialogueVisibility()
 }
 
 const handleKeydown = (event: KeyboardEvent): void => {
@@ -85,6 +94,7 @@ const handleKeydown = (event: KeyboardEvent): void => {
 
   if (isDialogueVisible.value && (event.key === ' ' || event.key === 'Enter')) {
     event.preventDefault()
+    if (event.repeat) return // 避免长按按键时连续推进剧情
     advance()
   }
 }
@@ -127,19 +137,20 @@ const handleAction = (key: string): void => {
     <GameScreen :scene="gameState.scene" />
 
     <footer class="dialogue-layer">
-      <div v-show="isDialogueVisible && !isHistoryVisible" class="dialogue-stack">
-        <DialogueBox
-          :speaker-name="gameState.speaker"
-          :avatar="avatarImage"
-          :show-avatar="settings.showAvatar"
-          :text="gameState.text"
-        />
-
+      <DialogueBox
+        v-show="isDialogueVisible && !isHistoryVisible"
+        ref="dialogueBoxRef"
+        :speaker-name="gameState.speaker"
+        :avatar="avatarImage"
+        :show-avatar="settings.showAvatar"
+        :text="gameState.text"
+        :text-speed="settings.textSpeed"
+      >
         <GameActionBar
           :interactive="isDialogueVisible && !isHistoryVisible"
           @action="handleAction"
         />
-      </div>
+      </DialogueBox>
     </footer>
 
     <DialogueHistoryOverlay :open="isHistoryVisible" @close="isHistoryVisible = false" />
@@ -157,17 +168,9 @@ const handleAction = (key: string): void => {
 
 .dialogue-layer {
   position: absolute;
-  right: 50%;
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  transform: translateX(50%);
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 2;
-  width: min(100% - 3rem, 960px);
-}
-
-.dialogue-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.55rem;
 }
 </style>

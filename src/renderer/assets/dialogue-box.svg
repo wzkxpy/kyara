@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="320" viewBox="0 0 1024 320" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="dialogue-gradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E6DDFB" stop-opacity="0"/>
+      <stop offset="0.12" stop-color="#E6DDFB" stop-opacity="0.45"/>
+      <stop offset="0.4" stop-color="#E3D9FA" stop-opacity="0.72"/>
+      <stop offset="0.75" stop-color="#DDD2F6" stop-opacity="0.86"/>
+      <stop offset="1" stop-color="#D6CAF2" stop-opacity="0.94"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="320" fill="url(#dialogue-gradient)"/>
+</svg>
