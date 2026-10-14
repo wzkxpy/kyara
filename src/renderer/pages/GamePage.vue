@@ -18,7 +18,7 @@ const { state: gameState } = storeToRefs(session)
 const { settings } = storeToRefs(useSettingsStore())
 
 // 游戏界面
-const emit = defineEmits<{ settings: [] }>()
+const emit = defineEmits<{ settings: []; save: []; load: [] }>()
 
 const isHistoryVisible = ref(false) // 历史记录 overlay 显示状态
 const isDialogueVisible = ref(true) // 对话框显示状态
@@ -118,6 +118,14 @@ const handleAction = (key: string): void => {
 
   if (key === 'settings') {
     emit('settings')
+  }
+
+  if (key === 'save') {
+    emit('save')
+  }
+
+  if (key === 'load') {
+    emit('load')
   }
 
   if (key === 'close') {

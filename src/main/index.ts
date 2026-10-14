@@ -1,15 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { getSettings, setSettings } from './settings'
-import type { Settings } from '../shared/types/settings'
+import { getSettings } from './settings'
+import { registerIpcHandlers } from './ipc'
 import icon from '../../resources/icon.png?asset'
-
-// 应用全屏设置
-function applyDisplayMode(settings: Settings): void {
-  const targetWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
-  targetWindow?.setFullScreen(settings.displayMode === 'fullscreen')
-}
 
 // 创建主窗口
 function createWindow(): void {
@@ -63,19 +57,8 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC 测试接口
-  ipcMain.on('ping', () => console.log('pong'))
-
-  // 全局设置读写接口
-  ipcMain.handle('settings:get', () => getSettings())
-  ipcMain.handle('settings:set', (_event, settings: Settings) => {
-    const nextSettings = setSettings(settings)
-    applyDisplayMode(nextSettings)
-    return nextSettings
-  })
-
-  // 应用退出接口
-  ipcMain.on('app:quit', () => app.quit())
+  // 注册 IPC 接口
+  registerIpcHandlers()
 
   createWindow()
 

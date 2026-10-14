@@ -1,12 +1,19 @@
+// src/preload/index.ts
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { Settings } from '../shared/types/settings'
+import type { SaveData, SaveMetadata } from '../shared/types/savedata'
 
 // 渲染进程可用的自定义 API
 const api = {
   settings: {
     get: (): Promise<Settings> => ipcRenderer.invoke('settings:get'),
     set: (settings: Settings): Promise<Settings> => ipcRenderer.invoke('settings:set', settings)
+  },
+  saves: {
+    list: (): Promise<SaveMetadata[]> => ipcRenderer.invoke('saves:list'),
+    read: (slotId: number): Promise<SaveData | null> => ipcRenderer.invoke('saves:read', slotId),
+    write: (data: SaveData): Promise<void> => ipcRenderer.invoke('saves:write', data)
   },
   app: {
     quit: (): void => ipcRenderer.send('app:quit')

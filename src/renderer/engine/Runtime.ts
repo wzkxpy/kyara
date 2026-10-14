@@ -1,3 +1,4 @@
+// src/renderer/engine/Runtime.ts
 import type { Command } from '@shared/types/command'
 import type { GameState } from '@shared/types/state'
 import type { AudioManager } from './AudioManager'

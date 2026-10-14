@@ -1,3 +1,4 @@
+// src/shared/types/state.ts
 export interface GameState {
   pc: number
 

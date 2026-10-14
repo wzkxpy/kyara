@@ -1,5 +1,4 @@
 // src/renderer/stores/gameSession.ts
-
 import { defineStore } from 'pinia'
 import { reactive, ref, shallowRef } from 'vue'
 
@@ -18,14 +17,15 @@ export const useGameSessionStore = defineStore('gameSession', () => {
   const runtime = shallowRef<Runtime | null>(null)
   const audio = shallowRef<AudioManager | null>(null)
 
-  // 开始新游戏
+  // 开始游戏
   function startGame(
     commands: Command[],
-    resolveAudio: ConstructorParameters<typeof AudioManager>[0]
+    resolveAudio: ConstructorParameters<typeof AudioManager>[0],
+    savedState?: GameState
   ): void {
     endGame() // 如果已有游戏会话，先销毁
 
-    const gameState = reactive(initState())
+    const gameState = reactive(savedState ? structuredClone(savedState) : initState())
     const audioManager = new AudioManager(resolveAudio)
     const gameRuntime = new Runtime(commands, gameState, audioManager, settingsStore.settings)
 
@@ -33,7 +33,15 @@ export const useGameSessionStore = defineStore('gameSession', () => {
     runtime.value = gameRuntime
     audio.value = audioManager
 
-    gameRuntime.advance()
+    if (savedState) {
+      // 读档：恢复 BGM，不推进剧情
+      if (gameState.bgm) {
+        audioManager.playBgm(gameState.bgm)
+      }
+    } else {
+      // 新游戏：执行到第一句对话
+      gameRuntime.advance()
+    }
   }
 
   // 推进剧情
