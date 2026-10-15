@@ -4,7 +4,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import ConfirmDialog from '@renderer/components/ConfirmDialog.vue'
 import { useSaveLoad } from '@renderer/composables/useSaveLoad'
-import type { SaveData, SaveMetadata } from '@shared/types/savedata'
+import type { SaveMetadata } from '@shared/types/savedata'
 
 interface SaveSlot {
   index: number // 全局槽位序号（1 起）
@@ -13,9 +13,9 @@ interface SaveSlot {
 
 // mode: save | load
 const props = withDefaults(defineProps<{ mode?: 'save' | 'load' }>(), { mode: 'load' })
-const emit = defineEmits<{ back: []; loaded: [data: SaveData] }>()
+const emit = defineEmits<{ back: []; loaded: [] }>()
 
-const { snapshotState, createSaveData, listSaves, loadGame, saveGame } = useSaveLoad()
+const { listSaves, loadGame, saveGame } = useSaveLoad()
 
 const SLOTS_PER_PAGE = 12
 const TOTAL_SLOTS = 30 // 与主进程 saveService 的 MAX_SLOTS 一致
@@ -84,14 +84,11 @@ const goToPage = (page: number): void => {
   currentPage.value = page
 }
 
-// 写入槽位；快照由 useSaveLoad 从当前游戏会话获取
+// 写入槽位
 const saveToSlot = async (slot: SaveSlot): Promise<void> => {
   isBusy.value = true
   try {
-    // 截图捕获暂未实现，先传空字符串占位
-    const data = createSaveData(slot.index, snapshotState(), '')
-    await saveGame(data)
-    slot.metadata = data.metadata
+    slot.metadata = await saveGame(slot.index)
     showStatus(`已存档到槽位 ${slot.index}`)
   } catch (error) {
     console.error(`存档到槽位 ${slot.index} 失败:`, error)
@@ -101,16 +98,16 @@ const saveToSlot = async (slot: SaveSlot): Promise<void> => {
   }
 }
 
-// 读取槽位并交由上层恢复游戏会话
+// 读取槽位并直接恢复游戏会话，成功后通知上层切屏
 const loadFromSlot = async (slot: SaveSlot): Promise<void> => {
   isBusy.value = true
   try {
-    const data = await loadGame(slot.index)
-    if (!data) {
+    const restored = await loadGame(slot.index)
+    if (!restored) {
       showStatus(`槽位 ${slot.index} 为空`)
       return
     }
-    emit('loaded', data)
+    emit('loaded')
   } catch (error) {
     console.error(`读取槽位 ${slot.index} 失败:`, error)
     showStatus(`读档失败（槽位 ${slot.index}）`)

@@ -82,6 +82,10 @@ export function parse(source: string): Command[] {
           expectArgs(2)
           commands.push({ type: 'show', character: args[0], expression: args[1] })
           break
+        case 'load':
+          expectArgs(1)
+          commands.push({ type: 'load', scriptId: args[0] })
+          break
         default:
           throw new ScriptSyntaxError(`Unknown directive @${directive}`, lineNumber)
       }

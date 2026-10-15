@@ -9,10 +9,7 @@ import SettingsView from './pages/SettingsPage.vue'
 
 import { useSettingsStore } from '@renderer/stores/settings'
 import { useGameSessionStore } from '@renderer/stores/gameSession'
-
-import type { Command } from '@shared/types/command'
-import type { SaveData } from '@shared/types/savedata'
-import script from '../../resources/scripts/chap01.json'
+import { initResources } from '@renderer/engine/resources'
 
 // 当前界面状态
 type Screen = 'home' | 'game' | 'gallery' | 'saves' | 'settings'
@@ -28,24 +25,20 @@ const savesFromHome = ref(false)
 const settingsStore = useSettingsStore()
 const session = useGameSessionStore()
 
-// 启动时加载一次设置
+// 启动时预加载资源并加载一次设置
 onMounted(() => {
+  void initResources()
   void settingsStore.loadSettings()
 })
 
-// 音频资源路径解析
-const resolveAudio = (type: 'bgm' | 'voice' | 'sfx', name: string): string =>
-  `/resources/${type}/${name}.ogg`
-
 // 开始新游戏
 const startNewGame = (): void => {
-  session.startGame(script.commands as Command[], resolveAudio)
+  session.startGame()
   currentScreen.value = 'game'
 }
 
-// 读档完成，恢复游戏会话并进入游戏界面
-const handleSavesLoaded = (data: SaveData): void => {
-  session.startGame(script.commands as Command[], resolveAudio, data.state)
+// 读档完成，进入游戏界面
+const handleSavesLoaded = (): void => {
   currentScreen.value = 'game'
 }
 

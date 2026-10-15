@@ -8,3 +8,4 @@ export type Command =
   | { type: 'bgm'; name: string }
   | { type: 'sfx'; name: string }
   | { type: 'show'; character: string; expression: string }
+  | { type: 'load'; scriptId: string }

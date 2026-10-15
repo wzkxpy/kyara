@@ -2,47 +2,45 @@
 import { toRaw } from 'vue'
 import { useGameSessionStore } from '@renderer/stores/gameSession'
 
-import type { GameState } from '@shared/types/state'
 import type { SaveData, SaveMetadata } from '@shared/types/savedata'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useSaveLoad() {
   const session = useGameSessionStore()
 
-  function snapshotState(): GameState {
-    if (!session.state) {
-      throw new Error('No active game session')
-    }
-    return structuredClone(toRaw(session.state))
-  }
-
-  function createSaveData(slotId: number, state: GameState, screenshot: string): SaveData {
-    return {
-      metadata: {
-        slotId,
-        timestamp: Date.now(),
-        screenshot, // 暂未实现
-        previewText: state.text
-      },
-      state
-    }
-  }
-
+  // 获取存档列表
   async function listSaves(): Promise<SaveMetadata[]> {
     return window.api.saves.list()
   }
 
-  async function loadGame(slotId: number): Promise<SaveData | null> {
-    return window.api.saves.read(slotId)
+  // 加载游戏存档
+  async function loadGame(slotId: number): Promise<boolean> {
+    const data = await window.api.saves.read(slotId)
+    if (!data) return false
+    session.startGame(data.state.scriptId, data.state)
+    return true
   }
 
-  async function saveGame(data: SaveData): Promise<void> {
+  // 保存游戏存档
+  async function saveGame(slotId: number, screenshot = ''): Promise<SaveMetadata> {
+    if (!session.state) {
+      throw new Error('No active game session')
+    }
+    const state = structuredClone(toRaw(session.state))
+    const data: SaveData = {
+      metadata: {
+        slotId,
+        timestamp: Date.now(),
+        screenshot, // 截图捕获暂未实现
+        previewText: state.text
+      },
+      state
+    }
     await window.api.saves.write(data)
+    return data.metadata
   }
 
   return {
-    snapshotState,
-    createSaveData,
     listSaves,
     loadGame,
     saveGame

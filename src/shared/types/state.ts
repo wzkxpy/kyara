@@ -1,5 +1,6 @@
 // src/shared/types/state.ts
 export interface GameState {
+  scriptId: string
   pc: number
 
   scene: {

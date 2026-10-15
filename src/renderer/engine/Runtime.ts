@@ -3,6 +3,7 @@ import type { Command } from '@shared/types/command'
 import type { GameState } from '@shared/types/state'
 import type { AudioManager } from './AudioManager'
 import type { Settings } from '@shared/types/settings'
+import { loadScript } from '../engine/resources'
 
 export class Runtime {
   constructor(
@@ -62,6 +63,12 @@ export class Runtime {
             this.audio.playVoice(command.voice)
           }
           return
+
+        case 'load':
+          this.commands = loadScript(command.scriptId)
+          this.state.pc = 0
+          this.state.scriptId = command.scriptId
+          break
       }
     }
 
