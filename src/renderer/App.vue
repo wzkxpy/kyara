@@ -1,3 +1,4 @@
+<!-- src/renderer/App.vue -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
@@ -15,6 +16,8 @@ import { initResources } from '@renderer/engine/resources'
 type Screen = 'home' | 'game' | 'gallery' | 'saves' | 'settings'
 
 const currentScreen = ref<Screen>('home')
+// 返回已有游戏时显示全文，新游戏和读档仍逐字显示。
+const showFullTextOnEntry = ref(false)
 
 const settingsFromHome = ref(false)
 // 存档/读档界面的模式与来源，返回时按来源跳转
@@ -34,11 +37,13 @@ onMounted(() => {
 // 开始新游戏
 const startNewGame = (): void => {
   session.startGame()
+  showFullTextOnEntry.value = false
   currentScreen.value = 'game'
 }
 
 // 读档完成，进入游戏界面
 const handleSavesLoaded = (): void => {
+  showFullTextOnEntry.value = false
   currentScreen.value = 'game'
 }
 
@@ -50,6 +55,7 @@ const openSettingsFromHome = (): void => {
 
 // 从游戏界面进入设置
 const openSettingsFromGame = (): void => {
+  showFullTextOnEntry.value = true
   settingsFromHome.value = false
   currentScreen.value = 'settings'
 }
@@ -63,6 +69,7 @@ const openSavesFromHome = (): void => {
 
 // 从游戏界面进入存档/读档界面
 const openSavesFromGame = (mode: 'save' | 'load'): void => {
+  showFullTextOnEntry.value = true
   savesMode.value = mode
   savesFromHome.value = false
   currentScreen.value = 'saves'
@@ -90,6 +97,7 @@ const returnToHome = (): void => {
   />
   <GameView
     v-else-if="currentScreen === 'game'"
+    :show-full-text-on-mount="showFullTextOnEntry"
     @settings="openSettingsFromGame"
     @save="openSavesFromGame('save')"
     @load="openSavesFromGame('load')"

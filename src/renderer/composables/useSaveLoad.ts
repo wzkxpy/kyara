@@ -17,7 +17,7 @@ export function useSaveLoad() {
   async function loadGame(slotId: number): Promise<boolean> {
     const data = await window.api.saves.read(slotId)
     if (!data) return false
-    session.startGame(data.state.scriptId, data.state)
+    session.loadGame(data.state)
     return true
   }
 

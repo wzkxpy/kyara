@@ -17,6 +17,10 @@ const session = useGameSessionStore()
 const { state: gameState } = storeToRefs(session)
 const { settings } = storeToRefs(useSettingsStore())
 
+const props = withDefaults(defineProps<{ showFullTextOnMount?: boolean }>(), {
+  showFullTextOnMount: false
+})
+
 // 游戏界面
 const emit = defineEmits<{ settings: []; save: []; load: [] }>()
 
@@ -100,6 +104,8 @@ const handleKeydown = (event: KeyboardEvent): void => {
 }
 
 onMounted(() => {
+  // 对话框已挂载，直接补全当前文本，不推进剧情。
+  if (props.showFullTextOnMount) dialogueBoxRef.value?.finish()
   window.addEventListener('keydown', handleKeydown)
 })
 

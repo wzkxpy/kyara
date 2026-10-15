@@ -15,13 +15,13 @@ export const useGameSessionStore = defineStore('gameSession', () => {
   let runtime: Runtime | null = null
   let audio: AudioManager | null = null
 
-  // 开始游戏
-  function startGame(scriptId: string = DEFAULT_SCRIPT, savedState?: GameState): void {
+  // 组装会话，新游戏与读档共用，不在此推进剧情。
+  function initSession(initialState: GameState): void {
     endGame()
-    const gameState = reactive(savedState ? structuredClone(savedState) : initState(scriptId))
+    const gameState = reactive(initialState)
     const audioManager = new AudioManager(getAudioResolver())
     const gameRuntime = new Runtime(
-      loadScript(scriptId),
+      loadScript(gameState.scriptId),
       gameState,
       audioManager,
       settingsStore.settings
@@ -29,16 +29,21 @@ export const useGameSessionStore = defineStore('gameSession', () => {
     state.value = gameState
     runtime = gameRuntime
     audio = audioManager
-    if (savedState) {
-      if (gameState.bgm) {
-        audioManager.playBgm(gameState.bgm)
-      }
-    } else {
-      gameRuntime.advance()
-    }
   }
 
-  // 推进剧情
+  // 开始新游戏
+  function startGame(): void {
+    initSession(initState(DEFAULT_SCRIPT))
+    runtime?.advance()
+  }
+
+  // 读取存档
+  function loadGame(savedState: GameState): void {
+    initSession(structuredClone(savedState))
+    if (savedState.bgm) audio?.playBgm(savedState.bgm)
+  }
+
+  // 推进一次剧情
   function advance(): void {
     runtime?.advance()
   }
@@ -54,6 +59,7 @@ export const useGameSessionStore = defineStore('gameSession', () => {
   return {
     state,
     startGame,
+    loadGame,
     advance,
     endGame
   }
