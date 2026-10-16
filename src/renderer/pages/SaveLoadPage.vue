@@ -36,21 +36,12 @@ const visibleSlots = computed(() =>
 const isSaveMode = computed(() => props.mode === 'save')
 const title = computed(() => (isSaveMode.value ? '存档' : '读档'))
 
-// 覆盖存档二次确认
+// 覆盖存档、读档的二次确认
 const overwriteIndex = ref<number | null>(null)
-
-// 底部状态提示，短暂显示后自动清除
-const statusMessage = ref('')
-let statusTimer: ReturnType<typeof setTimeout> | null = null
-
-const showStatus = (message: string): void => {
-  statusMessage.value = message
-  if (statusTimer) clearTimeout(statusTimer)
-  statusTimer = setTimeout(() => (statusMessage.value = ''), 2200)
-}
+const loadIndex = ref<number | null>(null)
 
 onBeforeUnmount(() => {
-  if (statusTimer) clearTimeout(statusTimer)
+  window.removeEventListener('keydown', handleKeydown)
 })
 
 // 启动时拉取存档元数据列表
@@ -63,12 +54,12 @@ const loadSlotList = async (): Promise<void> => {
     }
   } catch (error) {
     console.error('读取存档列表失败:', error)
-    showStatus('读取存档列表失败')
   }
 }
 
 onMounted(() => {
   void loadSlotList()
+  window.addEventListener('keydown', handleKeydown)
 })
 
 const formatTimestamp = (timestamp: number): string => {
@@ -89,10 +80,8 @@ const saveToSlot = async (slot: SaveSlot): Promise<void> => {
   isBusy.value = true
   try {
     slot.metadata = await saveGame(slot.index)
-    showStatus(`已存档到槽位 ${slot.index}`)
   } catch (error) {
     console.error(`存档到槽位 ${slot.index} 失败:`, error)
-    showStatus(`存档失败（槽位 ${slot.index}）`)
   } finally {
     isBusy.value = false
   }
@@ -103,14 +92,10 @@ const loadFromSlot = async (slot: SaveSlot): Promise<void> => {
   isBusy.value = true
   try {
     const restored = await loadGame(slot.index)
-    if (!restored) {
-      showStatus(`槽位 ${slot.index} 为空`)
-      return
-    }
+    if (!restored) return
     emit('loaded')
   } catch (error) {
     console.error(`读取槽位 ${slot.index} 失败:`, error)
-    showStatus(`读档失败（槽位 ${slot.index}）`)
   } finally {
     isBusy.value = false
   }
@@ -129,9 +114,9 @@ const handleSlotClick = (slot: SaveSlot): void => {
     return
   }
 
-  // 读档模式：仅已占用槽位可读取
+  // 读档模式：仅已占用槽位可读取，二次确认后读取
   if (!slot.metadata) return
-  void loadFromSlot(slot)
+  loadIndex.value = slot.index
 }
 
 const confirmOverwrite = (): void => {
@@ -140,10 +125,23 @@ const confirmOverwrite = (): void => {
   if (target) void saveToSlot(target)
 }
 
+const confirmLoad = (): void => {
+  const target = slots.value.find((s) => s.index === loadIndex.value)
+  loadIndex.value = null
+  if (target) void loadFromSlot(target)
+}
+
 // 右键返回来源页面
 const handleContextMenu = (event: MouseEvent): void => {
   event.preventDefault()
   emit('back')
+}
+
+// Esc 返回来源页面
+const handleKeydown = (event: KeyboardEvent): void => {
+  if (event.key === 'Escape') {
+    emit('back')
+  }
 }
 </script>
 
@@ -188,8 +186,6 @@ const handleContextMenu = (event: MouseEvent): void => {
     </section>
 
     <footer class="footer">
-      <p class="status" aria-live="polite">{{ statusMessage }}</p>
-
       <div class="pager">
         <button type="button" :disabled="currentPage === 0" @click="goToPage(currentPage - 1)">
           上一页
@@ -207,10 +203,17 @@ const handleContextMenu = (event: MouseEvent): void => {
 
     <ConfirmDialog
       :open="overwriteIndex !== null"
-      :message="`覆盖槽位 ${overwriteIndex} 的存档？`"
+      :message="`确认要覆盖存档吗？`"
       danger
       @confirm="confirmOverwrite"
       @cancel="overwriteIndex = null"
+    />
+
+    <ConfirmDialog
+      :open="loadIndex !== null"
+      :message="`确认要读档吗？`"
+      @confirm="confirmLoad"
+      @cancel="loadIndex = null"
     />
   </main>
 </template>
@@ -288,7 +291,7 @@ const handleContextMenu = (event: MouseEvent): void => {
 }
 
 .slot:disabled {
-  cursor: not-allowed;
+  cursor: default;
   opacity: 0.72;
 }
 
@@ -360,19 +363,11 @@ const handleContextMenu = (event: MouseEvent): void => {
 .footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: flex-end;
   padding: 0.9rem 1.5rem;
   border-top: 1px solid rgba(84, 104, 255, 0.18);
   background: rgba(246, 247, 251, 0.94);
   backdrop-filter: blur(12px);
-}
-
-.status {
-  margin: 0;
-  min-height: 1.4rem;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
 }
 
 .pager {

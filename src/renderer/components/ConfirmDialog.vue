@@ -1,5 +1,7 @@
 <script setup lang="ts">
-withDefaults(
+import { onBeforeUnmount, onMounted } from 'vue'
+
+const props = withDefaults(
   defineProps<{
     open: boolean
     message: string
@@ -11,17 +13,36 @@ withDefaults(
 )
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
+
+// 弹窗打开时按 Esc 视为取消
+const handleKeydown = (event: KeyboardEvent): void => {
+  if (!props.open || event.key !== 'Escape') return
+  event.stopImmediatePropagation() // 阻止事件冒泡，避免触发游戏界面的 Esc 事件
+  emit('cancel')
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>
   <Teleport to="body">
     <Transition name="confirm-fade">
-      <div v-if="open" class="confirm-overlay" role="presentation" @click.self="emit('cancel')">
+      <div
+        v-if="open"
+        class="confirm-overlay"
+        role="presentation"
+        @contextmenu.prevent="emit('cancel')"
+      >
         <section class="confirm-dialog" role="dialog" aria-modal="true" :aria-label="message">
           <h2 class="confirm-message">{{ message }}</h2>
 
           <footer class="confirm-footer">
-            <button type="button" class="cancel-button" @click="emit('cancel')">否</button>
             <button
               type="button"
               class="confirm-button"
@@ -30,6 +51,7 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
             >
               是
             </button>
+            <button type="button" class="cancel-button" @click="emit('cancel')">否</button>
           </footer>
         </section>
       </div>
@@ -45,8 +67,6 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background: rgba(31, 36, 48, 0.28);
-  backdrop-filter: blur(6px);
 }
 
 .confirm-dialog {
@@ -69,9 +89,9 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
 }
 
 .confirm-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: center;
   padding: 0.9rem 1.35rem 1.15rem;
   border-top: 1px solid rgba(84, 104, 255, 0.14);
   background: rgba(246, 247, 251, 0.72);

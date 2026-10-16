@@ -124,7 +124,7 @@ export async function writeSave(data: SaveData, screenshot: Buffer): Promise<voi
 // 从 URL 映射到本地存档截图文件名
 // URL: image://screenshot/save${slotId}.jpg?v=${timestamp}
 function getScreenshotName(url: string): string | null {
-  const match = /^image:\/\/screenshot\/save([1-9]|[12][0-9]|30)\.jpg(?:\?v=\d+)?$/.exec(url)
+  const match = /^image:\/\/screenshot\/save([0-9]|[12][0-9]|30)\.jpg(?:\?v=\d+)?$/.exec(url)
   return match ? `save${match[1]}.jpg` : null
 }
 
