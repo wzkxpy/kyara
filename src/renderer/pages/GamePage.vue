@@ -1,6 +1,6 @@
 <!-- src/renderer/pages/GamePage.vue -->
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import GameScreen from '@renderer/components/GameScreen.vue'
@@ -24,6 +24,8 @@ const props = withDefaults(defineProps<{ showFullTextOnMount?: boolean }>(), {
 // 游戏界面
 const emit = defineEmits<{ settings: []; save: []; load: [] }>()
 
+const isCapturing = ref(false) // 截图中，隐藏对话框和操作栏并阻止游戏交互
+
 const isHistoryVisible = ref(false) // 历史记录 overlay 显示状态
 const isDialogueVisible = ref(true) // 对话框显示状态
 
@@ -36,6 +38,7 @@ const toggleDialogueVisibility = (): void => {
 
 // 推进剧情：正在逐字显示时先补全文字，否则进入下一条剧情
 const advance = (): void => {
+  if (isCapturing.value) return
   const dialogueBox = dialogueBoxRef.value
   if (dialogueBox?.isTyping) {
     dialogueBox.finish()
@@ -44,7 +47,9 @@ const advance = (): void => {
   session.advance()
 }
 
+// 左键点击事件
 const handleLeftClick = (event: MouseEvent): void => {
+  if (isCapturing.value) return
   // 操作栏按钮不触发翻页
   if (event.target instanceof Element && event.target.closest('.game-action-root')) {
     return
@@ -63,6 +68,7 @@ const handleLeftClick = (event: MouseEvent): void => {
 }
 
 const handleWheel = (event: WheelEvent): void => {
+  if (isCapturing.value) return
   if (isHistoryVisible.value) return
   if (!isDialogueVisible.value) return
 
@@ -76,12 +82,13 @@ const handleWheel = (event: WheelEvent): void => {
 // 右键点击切换对话框显示状态
 const handleContextMenu = (event: MouseEvent): void => {
   event.preventDefault()
-  if (isHistoryVisible.value) return
+  if (isCapturing.value || isHistoryVisible.value) return
 
   toggleDialogueVisibility()
 }
 
 const handleKeydown = (event: KeyboardEvent): void => {
+  if (isCapturing.value) return
   if (isHistoryVisible.value) {
     if (event.key === 'Escape') {
       isHistoryVisible.value = false
@@ -117,7 +124,20 @@ const openHistory = (): void => {
   isHistoryVisible.value = true
 }
 
+const openSavePage = async (): Promise<void> => {
+  isCapturing.value = true
+  await nextTick()
+  // 等待隐藏界面后的画面完成绘制。
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+  })
+  await window.api.saves.capture()
+  isCapturing.value = false
+  emit('save')
+}
+
 const handleAction = (key: string): void => {
+  if (isCapturing.value) return
   if (key === 'history') {
     openHistory()
   }
@@ -127,7 +147,7 @@ const handleAction = (key: string): void => {
   }
 
   if (key === 'save') {
-    emit('save')
+    void openSavePage()
   }
 
   if (key === 'load') {
@@ -144,6 +164,7 @@ const handleAction = (key: string): void => {
   <main
     v-if="gameState"
     class="page"
+    :class="{ 'is-capturing': isCapturing }"
     @click="handleLeftClick"
     @wheel="handleWheel"
     @contextmenu="handleContextMenu"
@@ -161,7 +182,7 @@ const handleAction = (key: string): void => {
         :text-speed="settings.textSpeed"
       >
         <GameActionBar
-          :interactive="isDialogueVisible && !isHistoryVisible"
+          :interactive="isDialogueVisible && !isHistoryVisible && !isCapturing"
           @action="handleAction"
         />
       </DialogueBox>
@@ -178,6 +199,10 @@ const handleAction = (key: string): void => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.is-capturing .dialogue-layer {
+  visibility: hidden;
 }
 
 .dialogue-layer {

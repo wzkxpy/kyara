@@ -167,7 +167,8 @@ const handleContextMenu = (event: MouseEvent): void => {
         >
           <div class="slot-thumb">
             <img
-              v-if="slot.metadata?.screenshot"
+              v-if="slot.metadata"
+              :key="slot.metadata.timestamp"
               :src="slot.metadata.screenshot"
               alt=""
               draggable="false"

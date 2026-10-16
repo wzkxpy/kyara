@@ -25,10 +25,18 @@ export function registerIpcHandlers(): void {
     return nextSettings
   })
 
-  // 存档读写接口
+  // 存档接口
+  let screenshot: Buffer // 暂存最新截图，选择槽位后写入
+  ipcMain.handle('saves:capture', async (event) => {
+    const image = await event.sender.capturePage() // 截取页面当前画面
+    screenshot = image.resize({ width: 480 }).toJPEG(80)
+  })
   ipcMain.handle('saves:list', () => listSaves())
   ipcMain.handle('saves:read', (_event, slotId: number) => readSave(slotId))
-  ipcMain.handle('saves:write', (_event, data: SaveData) => writeSave(data))
+  ipcMain.handle('saves:write', async (_event, data: SaveData) => {
+    await writeSave(data, screenshot)
+    return data.metadata
+  })
 
   // 应用退出接口
   ipcMain.on('app:quit', () => app.quit())

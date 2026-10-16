@@ -22,22 +22,22 @@ export function useSaveLoad() {
   }
 
   // 保存游戏存档
-  async function saveGame(slotId: number, screenshot = ''): Promise<SaveMetadata> {
+  async function saveGame(slotId: number): Promise<SaveMetadata> {
     if (!session.state) {
       throw new Error('No active game session')
     }
     const state = structuredClone(toRaw(session.state))
+    const timestamp = Date.now()
     const data: SaveData = {
       metadata: {
         slotId,
-        timestamp: Date.now(),
-        screenshot, // 截图捕获暂未实现
-        previewText: state.text
+        timestamp,
+        previewText: state.text,
+        screenshot: `image://screenshot/save${slotId}.jpg?v=${timestamp}`
       },
       state
     }
-    await window.api.saves.write(data)
-    return data.metadata
+    return window.api.saves.write(data)
   }
 
   return {

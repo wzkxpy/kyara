@@ -179,13 +179,11 @@ watch(
       </div>
     </div>
 
-    <Teleport to="body">
-      <div class="game-action-hint" aria-live="polite">
-        <span v-if="hoveredActionLabel" class="game-action-hint-text">
-          {{ hoveredActionLabel }}
-        </span>
-      </div>
-    </Teleport>
+    <div v-if="props.interactive" class="game-action-hint" aria-live="polite">
+      <span v-if="hoveredActionLabel" class="game-action-hint-text">
+        {{ hoveredActionLabel }}
+      </span>
+    </div>
   </div>
 </template>
 
@@ -259,6 +257,7 @@ watch(
 }
 
 .game-action-hint {
+  /* Keep viewport positioning outside the transformed action shell. */
   position: fixed;
   left: max(1rem, env(safe-area-inset-left));
   bottom: max(1rem, env(safe-area-inset-bottom));

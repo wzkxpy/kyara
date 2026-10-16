@@ -3,8 +3,8 @@ import type { GameState } from './state'
 export interface SaveMetadata {
   slotId: number
   timestamp: number
-  screenshot: string | null
   previewText: string
+  screenshot: string
 }
 
 export interface SaveData {

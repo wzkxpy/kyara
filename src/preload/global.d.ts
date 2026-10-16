@@ -12,9 +12,10 @@ declare global {
         set: (settings: Settings) => Promise<Settings>
       }
       saves: {
+        capture: () => Promise<void>
         list: () => Promise<SaveMetadata[]>
         read: (slotId: number) => Promise<SaveData | null>
-        write: (data: SaveData) => Promise<void>
+        write: (data: SaveData) => Promise<SaveMetadata>
       }
       app: {
         quit: () => void

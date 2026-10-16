@@ -11,9 +11,10 @@ const api = {
     set: (settings: Settings): Promise<Settings> => ipcRenderer.invoke('settings:set', settings)
   },
   saves: {
+    capture: (): Promise<void> => ipcRenderer.invoke('saves:capture'),
     list: (): Promise<SaveMetadata[]> => ipcRenderer.invoke('saves:list'),
     read: (slotId: number): Promise<SaveData | null> => ipcRenderer.invoke('saves:read', slotId),
-    write: (data: SaveData): Promise<void> => ipcRenderer.invoke('saves:write', data)
+    write: (data: SaveData): Promise<SaveMetadata> => ipcRenderer.invoke('saves:write', data)
   },
   app: {
     quit: (): void => ipcRenderer.send('app:quit')

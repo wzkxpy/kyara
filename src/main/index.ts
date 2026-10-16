@@ -1,9 +1,18 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, protocol } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { getSettings } from './settings'
 import { registerIpcHandlers } from './ipc'
 import icon from '../../resources/icon.png?asset'
+
+import { registerImageProtocol } from './services/saveService'
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'image',
+    privileges: { standard: true, secure: true, supportFetchAPI: true }
+  }
+])
 
 // 创建主窗口
 function createWindow(): void {
@@ -58,6 +67,7 @@ app.whenReady().then(() => {
   })
 
   // 注册 IPC 接口
+  registerImageProtocol()
   registerIpcHandlers()
 
   createWindow()
