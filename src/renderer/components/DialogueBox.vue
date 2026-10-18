@@ -142,7 +142,7 @@ defineExpose({
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.8);
   padding: 0 0.75rem;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -152,7 +152,7 @@ defineExpose({
   min-height: 0;
   overflow: auto;
   color: var(--text-primary);
-  font-size: 1.15rem;
+  font-size: 1.5rem;
   line-height: 1.7;
   white-space: pre-wrap;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);

@@ -1,6 +1,6 @@
 <!-- src/renderer/pages/GamePage.vue -->
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import GameScreen from '@renderer/components/GameScreen.vue'
@@ -13,10 +13,12 @@ import { useSettingsStore } from '@renderer/stores/settings'
 import { useGameSessionStore } from '@renderer/stores/gameSession'
 import { useSaveLoad } from '@renderer/composables/useSaveLoad'
 
+import { collectHistory, type HistoryEntry } from '@renderer/lib/history'
+
 import avatarImage from '../../../resources/images/characters/avatar-example.svg'
 
 const session = useGameSessionStore()
-const { state: gameState } = storeToRefs(session)
+const { state: gameState, commands } = storeToRefs(session)
 const { settings } = storeToRefs(useSettingsStore())
 const { loadGame, saveGame } = useSaveLoad()
 
@@ -29,6 +31,7 @@ const emit = defineEmits<{ settings: []; save: []; load: [] }>()
 const isCapturing = ref(false) // 截图中，隐藏对话框和操作栏并阻止游戏交互
 
 const isHistoryVisible = ref(false) // 历史记录 overlay 显示状态
+const historyEntries = shallowRef<HistoryEntry[]>([]) // 历史页快照，打开时重新生成
 const isDialogueVisible = ref(true) // 对话框显示状态
 
 // 快速存读档的二次确认弹窗
@@ -130,6 +133,9 @@ onBeforeUnmount(() => {
 })
 
 const openHistory = (): void => {
+  const current = gameState.value
+  // 最多展示最近 300 条
+  historyEntries.value = current ? collectHistory(commands.value, current.pc, 300) : []
   isHistoryVisible.value = true
 }
 
@@ -230,7 +236,11 @@ const handleAction = (key: string): void => {
       </DialogueBox>
     </footer>
 
-    <DialogueHistoryOverlay :open="isHistoryVisible" @close="isHistoryVisible = false" />
+    <DialogueHistoryOverlay
+      :open="isHistoryVisible"
+      :entries="historyEntries"
+      @close="isHistoryVisible = false"
+    />
 
     <ConfirmDialog
       v-if="!isCapturing"

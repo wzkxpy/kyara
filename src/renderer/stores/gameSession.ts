@@ -1,6 +1,7 @@
 // src/renderer/stores/gameSession.ts
 import { defineStore } from 'pinia'
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
+import type { Command } from '@shared/types/command'
 import type { GameState } from '@shared/types/state'
 import { initState } from '../engine/GameState'
 import { Runtime } from '../engine/Runtime'
@@ -14,6 +15,12 @@ export const useGameSessionStore = defineStore('gameSession', () => {
   const state = ref<GameState | null>(null)
   let runtime: Runtime | null = null
   let audio: AudioManager | null = null
+
+  // 当前脚本命令，随 scriptId 更新
+  const commands = computed<readonly Command[]>(() => {
+    const current = state.value
+    return current ? loadScript(current.scriptId) : []
+  })
 
   // 组装会话，新游戏与读档共用，不在此推进剧情。
   function initSession(initialState: GameState): void {
@@ -58,6 +65,7 @@ export const useGameSessionStore = defineStore('gameSession', () => {
 
   return {
     state,
+    commands,
     startGame,
     loadGame,
     advance,
