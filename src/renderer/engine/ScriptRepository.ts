@@ -1,4 +1,3 @@
-// src/renderer/engine/resources.ts
 import type { Command } from '@shared/types/command'
 import scriptsManifest from '../../../resources/scripts/manifest.json'
 
@@ -14,8 +13,8 @@ const scriptModules = import.meta.glob<{ commands: Command[] }>([
 // 预载后的命令表：scriptId -> commands
 const registry: Record<string, Command[]> = {}
 
-// 启动时预加载资源：初始化完成后，各解析函数均为同步查表
-export async function initResources(): Promise<void> {
+// 启动时预加载脚本，初始化完成后按 ID 同步查表。
+export async function initScripts(): Promise<void> {
   await Promise.all(
     scriptsManifest.scripts.map(async ({ id, file }) => {
       const load = scriptModules[`../../../resources/scripts/${file}`]
@@ -33,17 +32,12 @@ export async function initResources(): Promise<void> {
   )
 }
 
-// 按脚本 ID 获取命令表（须先完成 initResources）
-export function loadScript(scriptId = DEFAULT_SCRIPT): Command[] {
+// 按脚本 ID 获取命令表（须先完成 initScripts）。
+export function getCommands(scriptId = DEFAULT_SCRIPT): Command[] {
   const commands = registry[scriptId]
   if (!commands) {
     const listed = scriptsManifest.scripts.some((s) => s.id === scriptId)
     throw new Error(listed ? `Script not loaded: ${scriptId}` : `Unknown script: ${scriptId}`)
   }
   return commands
-}
-
-// 音频资源路径解析
-export function getAudioResolver(): (type: 'bgm' | 'voice' | 'sfx', name: string) => string {
-  return (type, name) => `/resources/${type}/${name}.ogg`
 }

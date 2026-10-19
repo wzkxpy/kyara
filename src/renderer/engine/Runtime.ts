@@ -3,7 +3,7 @@ import type { Command } from '@shared/types/command'
 import type { GameState } from '@shared/types/state'
 import type { AudioManager } from './AudioManager'
 import type { Settings } from '@shared/types/settings'
-import { loadScript } from '../engine/resources'
+import { getCommands } from './ScriptRepository'
 
 export class Runtime {
   constructor(
@@ -35,12 +35,19 @@ export class Runtime {
           this.state.characters = []
           break
 
-        case 'show':
-          this.state.characters.push({
-            name: command.character,
-            expression: command.expression
-          })
+        case 'show': {
+          const character = this.state.characters.find((item) => item.name === command.character)
+          // 同一角色再次出场时更新表情，保留原有站位。
+          if (character) {
+            character.expression = command.expression
+          } else {
+            this.state.characters.push({
+              name: command.character,
+              expression: command.expression
+            })
+          }
           break
+        }
 
         case 'bgm':
           this.state.bgm = command.name
@@ -65,7 +72,7 @@ export class Runtime {
           return
 
         case 'load':
-          this.commands = loadScript(command.scriptId)
+          this.commands = getCommands(command.scriptId)
           this.state.pc = 0
           this.state.scriptId = command.scriptId
           break

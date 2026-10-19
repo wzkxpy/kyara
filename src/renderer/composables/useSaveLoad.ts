@@ -33,7 +33,7 @@ export function useSaveLoad() {
         slotId,
         timestamp,
         previewText: state.text,
-        screenshot: `image://screenshot/save${slotId}.jpg?v=${timestamp}`
+        screenshot: `screen-shot://image/save${slotId}.jpg?v=${timestamp}`
       },
       state
     }

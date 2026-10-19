@@ -1,5 +1,4 @@
-// rederer/src/engine/AudioManager.ts
-
+// renderer/engine/AudioManager.ts
 export class AudioManager {
   private bgm: HTMLAudioElement | null = null
   private bgmName: string | null = null
@@ -8,72 +7,117 @@ export class AudioManager {
 
   constructor(private resolveAudio: (type: 'bgm' | 'voice' | 'sfx', name: string) => string) {}
 
+  private createAudio(type: 'bgm' | 'voice' | 'sfx', name: string): HTMLAudioElement | null {
+    try {
+      return new Audio(this.resolveAudio(type, name))
+    } catch (error) {
+      // 清单缺少音频时只跳过播放，不中断剧情推进。
+      console.error(`音频资源解析失败：${type}/${name}`, error)
+      return null
+    }
+  }
+
+  private releaseAudio(audio: HTMLAudioElement | null): void {
+    if (!audio) return
+    audio.onended = null
+    audio.onerror = null
+    audio.pause()
+    audio.removeAttribute('src')
+    audio.load()
+  }
+
   // ---------- BGM ----------
 
   playBgm(name: string | null): void {
     if (name === this.bgmName) return
-
     this.stopBgm()
     if (name === null) return
 
-    const audio = new Audio(this.resolveAudio('bgm', name))
+    const audio = this.createAudio('bgm', name)
+    if (!audio) return
     audio.loop = true
 
     this.bgm = audio
     this.bgmName = name
 
+    audio.onerror = () => {
+      if (this.bgm !== audio) return
+      console.error(`背景音乐加载失败：${name}`, audio.error)
+      this.stopBgm()
+    }
     void audio.play().catch((error) => {
       if (this.bgm !== audio) return
       console.error(`Failed to play BGM: ${name}`, error)
+      this.stopBgm()
     })
   }
 
   stopBgm(): void {
-    this.bgm?.pause()
+    const audio = this.bgm
     this.bgm = null
     this.bgmName = null
+    this.releaseAudio(audio)
   }
 
   // ---------- Voice ----------
 
   playVoice(name: string): void {
     this.stopVoice()
-
-    const audio = new Audio(this.resolveAudio('voice', name))
+    const audio = this.createAudio('voice', name)
+    if (!audio) return
     this.voice = audio
 
+    audio.onended = () => {
+      if (this.voice === audio) this.stopVoice()
+    }
+    audio.onerror = () => {
+      if (this.voice !== audio) return
+      console.error(`语音加载失败：${name}`, audio.error)
+      this.stopVoice()
+    }
     void audio.play().catch((error) => {
       if (this.voice !== audio) return
       console.error(`Failed to play Voice: ${name}`, error)
+      this.stopVoice()
     })
   }
 
   stopVoice(): void {
-    this.voice?.pause()
+    const audio = this.voice
     this.voice = null
+    this.releaseAudio(audio)
   }
 
   // ---------- SFX ----------
 
   playSfx(name: string): void {
     this.stopSfx()
-
-    const audio = new Audio(this.resolveAudio('sfx', name))
+    const audio = this.createAudio('sfx', name)
+    if (!audio) return
     this.sfx = audio
 
+    audio.onended = () => {
+      if (this.sfx === audio) this.stopSfx()
+    }
+    audio.onerror = () => {
+      if (this.sfx !== audio) return
+      console.error(`音效加载失败：${name}`, audio.error)
+      this.stopSfx()
+    }
     void audio.play().catch((error) => {
       if (this.sfx !== audio) return
       console.error(`Failed to play SFX: ${name}`, error)
+      this.stopSfx()
     })
   }
 
   stopSfx(): void {
-    this.sfx?.pause()
+    const audio = this.sfx
     this.sfx = null
+    this.releaseAudio(audio)
   }
 
   // ---------- Lifecycle ----------
-
   dispose(): void {
     this.stopBgm()
     this.stopVoice()

@@ -6,10 +6,15 @@ import { registerIpcHandlers } from './ipc'
 import icon from '../../resources/icon.png?asset'
 
 import { registerImageProtocol } from './services/saveService'
+import { registerResourceProtocol } from './services/resourceService'
 
 protocol.registerSchemesAsPrivileged([
   {
-    scheme: 'image',
+    scheme: 'game-resource',
+    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true }
+  },
+  {
+    scheme: 'screen-shot',
     privileges: { standard: true, secure: true, supportFetchAPI: true }
   }
 ])
@@ -20,6 +25,7 @@ function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 720,
+    useContentSize: true, // 内容区保持 16:9，标题栏和边框额外计算
     resizable: false, // 固定窗口尺寸
     maximizable: false, // 禁用最大化
     fullscreenable: true, // 允许切换全屏
@@ -68,6 +74,7 @@ app.whenReady().then(() => {
 
   // 注册 IPC 接口
   registerImageProtocol()
+  registerResourceProtocol()
   registerIpcHandlers()
 
   createWindow()

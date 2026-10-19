@@ -3,10 +3,11 @@ import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 import type { Command } from '@shared/types/command'
 import type { GameState } from '@shared/types/state'
+import { getResourceUrl } from '@shared/resources'
 import { initState } from '../engine/GameState'
 import { Runtime } from '../engine/Runtime'
 import { AudioManager } from '../engine/AudioManager'
-import { getAudioResolver, loadScript, DEFAULT_SCRIPT } from '../engine/resources'
+import { getCommands, DEFAULT_SCRIPT } from '../engine/ScriptRepository'
 import { useSettingsStore } from './settings'
 
 export const useGameSessionStore = defineStore('gameSession', () => {
@@ -19,16 +20,18 @@ export const useGameSessionStore = defineStore('gameSession', () => {
   // 当前脚本命令，随 scriptId 更新
   const commands = computed<readonly Command[]>(() => {
     const current = state.value
-    return current ? loadScript(current.scriptId) : []
+    return current ? getCommands(current.scriptId) : []
   })
 
   // 组装会话，新游戏与读档共用，不在此推进剧情。
   function initSession(initialState: GameState): void {
     endGame()
     const gameState = reactive(initialState)
-    const audioManager = new AudioManager(getAudioResolver())
+    const audioManager = new AudioManager((type, name) =>
+      getResourceUrl(type === 'voice' ? 'voices' : type, name)
+    )
     const gameRuntime = new Runtime(
-      loadScript(gameState.scriptId),
+      getCommands(gameState.scriptId),
       gameState,
       audioManager,
       settingsStore.settings

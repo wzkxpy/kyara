@@ -217,7 +217,7 @@ const handleAction = (key: string): void => {
     @wheel="handleWheel"
     @contextmenu="handleContextMenu"
   >
-    <GameScreen :scene="gameState.scene" />
+    <GameScreen :scene="gameState.scene" :characters="gameState.characters" />
 
     <footer class="dialogue-layer">
       <DialogueBox

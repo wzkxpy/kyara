@@ -10,7 +10,7 @@ import SettingsView from './pages/SettingsPage.vue'
 
 import { useSettingsStore } from '@renderer/stores/settings'
 import { useGameSessionStore } from '@renderer/stores/gameSession'
-import { initResources } from '@renderer/engine/resources'
+import { initScripts } from '@renderer/engine/ScriptRepository'
 
 // 当前界面状态
 type Screen = 'home' | 'game' | 'gallery' | 'saves' | 'settings'
@@ -28,9 +28,9 @@ const savesFromHome = ref(false)
 const settingsStore = useSettingsStore()
 const session = useGameSessionStore()
 
-// 启动时预加载资源并加载一次设置
+// 启动时预加载脚本并加载一次设置。
 onMounted(() => {
-  void initResources()
+  void initScripts()
   void settingsStore.loadSettings()
 })
 
