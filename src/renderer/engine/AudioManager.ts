@@ -1,7 +1,6 @@
 // renderer/engine/AudioManager.ts
 export class AudioManager {
   private bgm: HTMLAudioElement | null = null
-  private bgmName: string | null = null
   private voice: HTMLAudioElement | null = null
   private sfx: HTMLAudioElement | null = null
 
@@ -29,7 +28,6 @@ export class AudioManager {
   // ---------- BGM ----------
 
   playBgm(name: string | null): void {
-    if (name === this.bgmName) return
     this.stopBgm()
     if (name === null) return
 
@@ -38,7 +36,6 @@ export class AudioManager {
     audio.loop = true
 
     this.bgm = audio
-    this.bgmName = name
 
     audio.onerror = () => {
       if (this.bgm !== audio) return
@@ -55,7 +52,6 @@ export class AudioManager {
   stopBgm(): void {
     const audio = this.bgm
     this.bgm = null
-    this.bgmName = null
     this.releaseAudio(audio)
   }
 

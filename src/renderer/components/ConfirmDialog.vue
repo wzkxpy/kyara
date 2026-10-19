@@ -63,7 +63,7 @@ onBeforeUnmount(() => {
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 110;
   display: grid;
   place-items: center;
   padding: 1.5rem;

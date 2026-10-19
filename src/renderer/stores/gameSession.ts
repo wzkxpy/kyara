@@ -58,6 +58,11 @@ export const useGameSessionStore = defineStore('gameSession', () => {
     runtime?.advance()
   }
 
+  // 历史回跳
+  function jumpTo(commandIndex: number): void {
+    runtime?.jumpTo(commandIndex)
+  }
+
   // 退出游戏到主界面
   function endGame(): void {
     audio?.dispose()
@@ -72,6 +77,7 @@ export const useGameSessionStore = defineStore('gameSession', () => {
     startGame,
     loadGame,
     advance,
+    jumpTo,
     endGame
   }
 })

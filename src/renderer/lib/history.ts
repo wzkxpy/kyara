@@ -1,7 +1,7 @@
 import type { Command } from '@shared/types/command'
 
 export interface HistoryEntry {
-  commandIndex: number // 脚本内命令索引，供后续历史跳转使用
+  commandIndex: number // 脚本内命令索引，用于历史回跳
   speaker: string | null
   text: string
 }

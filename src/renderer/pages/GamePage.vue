@@ -38,6 +38,9 @@ const isDialogueVisible = ref(true) // 对话框显示状态
 const showQuickSaveConfirm = ref(false)
 const showQuickLoadConfirm = ref(false)
 
+// 待确认的历史回跳目标
+const pendingHistoryJump = ref<number | null>(null)
+
 // 对话框组件引用
 const dialogueBoxRef = ref<InstanceType<typeof DialogueBox> | null>(null)
 // 对话框显示状态切换
@@ -100,7 +103,13 @@ const handleContextMenu = (event: MouseEvent): void => {
 // 键盘事件：空格或回车推进剧情，Esc 关闭对话框或历史记录
 const handleKeydown = (event: KeyboardEvent): void => {
   if (isCapturing.value) return
-  if (showQuickSaveConfirm.value || showQuickLoadConfirm.value) return
+  if (
+    showQuickSaveConfirm.value ||
+    showQuickLoadConfirm.value ||
+    pendingHistoryJump.value !== null
+  ) {
+    return
+  }
   if (isHistoryVisible.value) {
     if (event.key === 'Escape') {
       isHistoryVisible.value = false
@@ -137,6 +146,26 @@ const openHistory = (): void => {
   // 最多展示最近 300 条
   historyEntries.value = current ? collectHistory(commands.value, current.pc, 300) : []
   isHistoryVisible.value = true
+}
+
+// 点击历史行跳转按钮：记录目标并弹出确认
+const requestHistoryJump = (commandIndex: number): void => {
+  pendingHistoryJump.value = commandIndex
+}
+
+// 确认回跳：执行跳转并关闭历史，目标文本随后正常逐字显示
+const confirmHistoryJump = (): void => {
+  const commandIndex = pendingHistoryJump.value
+  pendingHistoryJump.value = null
+  if (commandIndex === null) return
+
+  session.jumpTo(commandIndex)
+  isHistoryVisible.value = false
+}
+
+// 取消回跳：仅关闭确认框，历史页保持打开
+const cancelHistoryJump = (): void => {
+  pendingHistoryJump.value = null
 }
 
 // 等待隐藏界面后的画面完成绘制并截图，图片暂存于主进程供存档写入
@@ -239,6 +268,7 @@ const handleAction = (key: string): void => {
     <DialogueHistoryOverlay
       :open="isHistoryVisible"
       :entries="historyEntries"
+      @jump="requestHistoryJump"
       @close="isHistoryVisible = false"
     />
 
@@ -256,6 +286,14 @@ const handleAction = (key: string): void => {
       message="确认要快速读档吗？"
       @confirm="quickLoad"
       @cancel="showQuickLoadConfirm = false"
+    />
+
+    <ConfirmDialog
+      v-if="!isCapturing"
+      :open="pendingHistoryJump !== null"
+      message="确认要回跳到这条记录吗？"
+      @confirm="confirmHistoryJump"
+      @cancel="cancelHistoryJump"
     />
   </main>
 </template>

@@ -150,7 +150,7 @@ defineExpose({
 .dialogue-text {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   color: var(--text-primary);
   font-size: 1.5rem;
   line-height: 1.7;

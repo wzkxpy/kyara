@@ -3,6 +3,7 @@ import type { Command } from '@shared/types/command'
 import type { GameState } from '@shared/types/state'
 import type { AudioManager } from './AudioManager'
 import type { Settings } from '@shared/types/settings'
+import { initState } from './GameState'
 import { getCommands } from './ScriptRepository'
 
 export class Runtime {
@@ -73,12 +74,66 @@ export class Runtime {
 
         case 'load':
           this.commands = getCommands(command.scriptId)
-          this.state.pc = 0
-          this.state.scriptId = command.scriptId
+          Object.assign(this.state, initState(command.scriptId))
+          this.audio.stopBgm()
+          // this.audio.stopVoice()
+          this.audio.stopSfx()
           break
       }
     }
 
     this.state.finished = true
+  }
+
+  // 回跳到脚本中指定的文本命令，并按空白基线重建舞台
+  jumpTo(index: number): void {
+    const target = this.commands[index]
+    if (target.type !== 'narration' && target.type !== 'dialogue') return
+
+    // 可见历史都位于当前脚本、当前 pc 之前，前缀中不会出现 load
+    // 仅重建舞台状态；新增舞台命令时需同步 advance
+    const replayed = initState(this.state.scriptId)
+    for (let i = 0; i < index; i++) {
+      const command = this.commands[i]
+      switch (command.type) {
+        case 'bg':
+          replayed.scene = { type: 'bg', name: command.name }
+          replayed.characters = []
+          break
+
+        case 'cg':
+          replayed.scene = { type: 'cg', name: command.name }
+          replayed.characters = []
+          break
+
+        case 'show': {
+          const character = replayed.characters.find((item) => item.name === command.character)
+          if (character) {
+            character.expression = command.expression
+          } else {
+            replayed.characters.push({
+              name: command.character,
+              expression: command.expression
+            })
+          }
+          break
+        }
+
+        case 'bgm':
+          replayed.bgm = command.name
+          break
+      }
+    }
+
+    replayed.speaker = target.type === 'dialogue' ? target.speaker : null
+    replayed.text = target.text
+    replayed.pc = index + 1
+
+    Object.assign(this.state, replayed) // 保持 reactive 代理身份
+    this.audio.stopVoice()
+    this.audio.playBgm(replayed.bgm)
+    if (target.type === 'dialogue' && target.voice) {
+      this.audio.playVoice(target.voice)
+    }
   }
 }

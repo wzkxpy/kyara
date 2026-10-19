@@ -7,7 +7,10 @@ const props = defineProps<{
   entries: HistoryEntry[]
 }>()
 
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{
+  close: []
+  jump: [commandIndex: number]
+}>()
 
 const scrollRef = ref<HTMLElement | null>(null)
 
@@ -76,6 +79,14 @@ const handleContextMenu = (event: MouseEvent): void => {
           <section ref="scrollRef" class="history-body" tabindex="-1">
             <div class="history-list">
               <article v-for="entry in entries" :key="entry.commandIndex" class="history-entry">
+                <button
+                  type="button"
+                  class="history-jump"
+                  tabindex="-1"
+                  @click="emit('jump', entry.commandIndex)"
+                >
+                  跳转
+                </button>
                 <p v-if="entry.speaker" class="history-speaker">{{ entry.speaker }}</p>
                 <p class="history-text" :class="{ 'is-narration': !entry.speaker }">
                   {{ entry.text }}
@@ -193,9 +204,30 @@ const handleContextMenu = (event: MouseEvent): void => {
 
 .history-entry {
   display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr);
+  grid-template-columns: 3rem 5.5rem minmax(0, 1fr);
   column-gap: 1rem;
   align-items: baseline;
+}
+
+.history-jump {
+  appearance: none;
+  grid-column: 1;
+  justify-self: start;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgba(84, 104, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.history-jump:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .history-entry + .history-entry {
@@ -203,7 +235,7 @@ const handleContextMenu = (event: MouseEvent): void => {
 }
 
 .history-speaker {
-  grid-column: 1;
+  grid-column: 2;
   overflow: hidden;
   color: var(--accent);
   font-size: 1.4rem;
@@ -214,7 +246,7 @@ const handleContextMenu = (event: MouseEvent): void => {
 }
 
 .history-text {
-  grid-column: 2;
+  grid-column: 3;
   color: var(--text-primary);
   font-size: 1.5rem;
   line-height: 1.75;
