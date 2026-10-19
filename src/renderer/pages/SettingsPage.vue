@@ -17,6 +17,14 @@ type NumberSettingKey =
 
 type BooleanSettingKey = 'interruptSpeech' | 'showAvatar'
 
+type SettingCategory = 'display' | 'dialogue' | 'audio'
+
+const categories: { key: SettingCategory; label: string }[] = [
+  { key: 'display', label: '显示' },
+  { key: 'dialogue', label: '对话' },
+  { key: 'audio', label: '音频' }
+]
+
 // 设置界面
 const props = withDefaults(
   defineProps<{
@@ -30,7 +38,8 @@ const props = withDefaults(
 const emit = defineEmits<{ game: []; home: [] }>()
 const settingsStore = useSettingsStore()
 const { settings, isLoading, errorMessage } = storeToRefs(settingsStore)
-const { updateSetting, resetSettings } = settingsStore
+const { previewSetting, updateSetting, persistSettings, resetSettings } = settingsStore
+const activeCategory = ref<SettingCategory>('display')
 const isResetConfirmOpen = ref(false)
 const isHomeConfirmOpen = ref(false)
 
@@ -42,8 +51,8 @@ const updateSelectSetting = <K extends 'displayMode' | 'skipMode'>(
   return updateSetting(key, value)
 }
 
-const updateNumberSetting = (key: NumberSettingKey, event: Event): Promise<void> => {
-  return updateSetting(key, Number((event.target as HTMLInputElement).value))
+const previewNumberSetting = (key: NumberSettingKey, event: Event): void => {
+  previewSetting(key, Number((event.target as HTMLInputElement).value))
 }
 
 const updateBooleanSetting = (key: BooleanSettingKey, event: Event): Promise<void> => {
@@ -88,12 +97,23 @@ const handleContextMenu = (event: MouseEvent): void => {
   <main class="page" @contextmenu="handleContextMenu">
     <header class="header">
       <h1>设置选项</h1>
+      <nav class="category-bar" aria-label="设置分类">
+        <button
+          v-for="category in categories"
+          :key="category.key"
+          type="button"
+          class="category-tab"
+          :class="{ 'is-active': activeCategory === category.key }"
+          :aria-current="activeCategory === category.key ? 'page' : undefined"
+          @click="activeCategory = category.key"
+        >
+          {{ category.label }}
+        </button>
+      </nav>
     </header>
 
     <section class="content">
-      <section class="setting-group">
-        <h2>显示</h2>
-
+      <section v-if="activeCategory === 'display'" class="setting-group">
         <div class="setting-item">
           <div class="setting-copy">
             <h3>显示模式</h3>
@@ -109,9 +129,7 @@ const handleContextMenu = (event: MouseEvent): void => {
         </div>
       </section>
 
-      <section class="setting-group">
-        <h2>对话</h2>
-
+      <section v-if="activeCategory === 'dialogue'" class="setting-group">
         <div class="setting-item">
           <div class="setting-copy">
             <h3>跳过未读文本</h3>
@@ -138,7 +156,8 @@ const handleContextMenu = (event: MouseEvent): void => {
               step="1"
               :value="settings.textSpeed"
               :disabled="isLoading"
-              @input="updateNumberSetting('textSpeed', $event)"
+              @input="previewNumberSetting('textSpeed', $event)"
+              @change="persistSettings"
             />
             <span class="range-value">{{ settings.textSpeed }}</span>
           </div>
@@ -156,7 +175,8 @@ const handleContextMenu = (event: MouseEvent): void => {
               step="1"
               :value="settings.autoSpeed"
               :disabled="isLoading"
-              @input="updateNumberSetting('autoSpeed', $event)"
+              @input="previewNumberSetting('autoSpeed', $event)"
+              @change="persistSettings"
             />
             <span class="range-value">{{ settings.autoSpeed }}</span>
           </div>
@@ -174,7 +194,8 @@ const handleContextMenu = (event: MouseEvent): void => {
               step="0.01"
               :value="settings.dialogOpacity"
               :disabled="isLoading"
-              @input="updateNumberSetting('dialogOpacity', $event)"
+              @input="previewNumberSetting('dialogOpacity', $event)"
+              @change="persistSettings"
             />
             <span class="range-value">{{ formatPercent(settings.dialogOpacity) }}</span>
           </div>
@@ -211,9 +232,7 @@ const handleContextMenu = (event: MouseEvent): void => {
         </div>
       </section>
 
-      <section class="setting-group">
-        <h2>音频</h2>
-
+      <section v-if="activeCategory === 'audio'" class="setting-group">
         <div class="setting-item">
           <div class="setting-copy">
             <h3>主音量</h3>
@@ -226,7 +245,8 @@ const handleContextMenu = (event: MouseEvent): void => {
               step="0.01"
               :value="settings.masterVolume"
               :disabled="isLoading"
-              @input="updateNumberSetting('masterVolume', $event)"
+              @input="previewNumberSetting('masterVolume', $event)"
+              @change="persistSettings"
             />
             <span class="range-value">{{ formatPercent(settings.masterVolume) }}</span>
           </div>
@@ -244,7 +264,8 @@ const handleContextMenu = (event: MouseEvent): void => {
               step="0.01"
               :value="settings.musicVolume"
               :disabled="isLoading"
-              @input="updateNumberSetting('musicVolume', $event)"
+              @input="previewNumberSetting('musicVolume', $event)"
+              @change="persistSettings"
             />
             <span class="range-value">{{ formatPercent(settings.musicVolume) }}</span>
           </div>
@@ -262,7 +283,8 @@ const handleContextMenu = (event: MouseEvent): void => {
               step="0.01"
               :value="settings.voiceVolume"
               :disabled="isLoading"
-              @input="updateNumberSetting('voiceVolume', $event)"
+              @input="previewNumberSetting('voiceVolume', $event)"
+              @change="persistSettings"
             />
             <span class="range-value">{{ formatPercent(settings.voiceVolume) }}</span>
           </div>
@@ -280,7 +302,8 @@ const handleContextMenu = (event: MouseEvent): void => {
               step="0.01"
               :value="settings.sfxVolume"
               :disabled="isLoading"
-              @input="updateNumberSetting('sfxVolume', $event)"
+              @input="previewNumberSetting('sfxVolume', $event)"
+              @change="persistSettings"
             />
             <span class="range-value">{{ formatPercent(settings.sfxVolume) }}</span>
           </div>
@@ -317,15 +340,18 @@ const handleContextMenu = (event: MouseEvent): void => {
 
 <style scoped>
 .page {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
+  gap: 1.5rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid rgba(84, 104, 255, 0.18);
 }
@@ -335,30 +361,54 @@ const handleContextMenu = (event: MouseEvent): void => {
   font-size: 1.25rem;
 }
 
-.header button {
+.category-bar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid rgba(84, 104, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.category-tab {
   appearance: none;
-  border: 1px solid rgba(84, 104, 255, 0.34);
+  border: 0;
   border-radius: 999px;
   background: transparent;
-  color: var(--text-primary);
-  padding: 0.4rem 0.9rem;
+  color: var(--text-secondary);
+  padding: 0.4rem 1.4rem;
+  font: inherit;
+  font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.category-tab:hover {
+  color: var(--accent);
+}
+
+.category-tab.is-active {
+  background: var(--accent);
+  color: #fff;
 }
 
 .content {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   max-width: 860px;
   width: 100%;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 1.5rem;
+  overflow: hidden;
 }
 
 .footer {
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
@@ -397,13 +447,6 @@ const handleContextMenu = (event: MouseEvent): void => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.setting-group h2 {
-  margin: 0;
-  color: var(--accent);
-  font-size: 0.95rem;
-  font-weight: 700;
 }
 
 .setting-item {

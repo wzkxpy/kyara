@@ -6,13 +6,14 @@ export interface GameState {
   scene: {
     type: 'bg' | 'cg'
     name: string
+    diff: string
   } | null
 
   bgm: string | null
 
   characters: {
     name: string
-    expression: string
+    diff: string
   }[]
 
   speaker: string | null

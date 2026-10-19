@@ -4,7 +4,7 @@ import { getResourceUrl } from '@shared/resources'
 import type { GameState } from '@shared/types/state'
 
 const props = defineProps<{
-  scene: { type: 'bg' | 'cg'; name: string } | null
+  scene: { type: 'bg' | 'cg'; name: string; diff: string } | null
   characters: GameState['characters']
 }>()
 const imageUrl = ref('')
@@ -12,7 +12,7 @@ const errorMessage = ref('')
 const characterImages = ref<{ name: string; imageUrl: string; errorMessage: string }[]>([])
 
 watch(
-  () => props.characters.map(({ name, expression }) => ({ name, expression })),
+  () => props.characters.map(({ name, diff }) => ({ name, diff })),
   (characters, _, onCleanup) => {
     let cancelled = false
     const images: HTMLImageElement[] = []
@@ -28,15 +28,15 @@ watch(
       errorMessage: ''
     }))
 
-    characters.forEach(({ name, expression }, index) => {
+    characters.forEach(({ name, diff }, index) => {
       const image = new Image()
       images.push(image)
       const item = characterImages.value[index]
-      const id = `${name} ${expression}`
+      const id = `${name}_${diff}`
       void (async () => {
         try {
           image.src = getResourceUrl('characters', id)
-          // 每张立绘独立解码，表情切换期间保留旧图。
+          // 每张立绘独立解码，差分切换期间保留旧图。
           await image.decode()
           if (!cancelled) item.imageUrl = image.src
         } catch (error) {
@@ -52,7 +52,7 @@ watch(
 )
 
 watch(
-  () => [props.scene?.type, props.scene?.name],
+  () => [props.scene?.type, props.scene?.name, props.scene?.diff],
   async (_, __, onCleanup) => {
     let cancelled = false
     const image = new Image()
@@ -66,15 +66,16 @@ watch(
       imageUrl.value = ''
       return
     }
+    const id = `${scene.name}_${scene.diff}`
     try {
-      image.src = getResourceUrl(scene.type === 'bg' ? 'backgrounds' : 'cgs', scene.name)
+      image.src = getResourceUrl(scene.type === 'bg' ? 'backgrounds' : 'cgs', id)
       // 解码后再替换画面，过期任务不能覆盖当前场景。
       await image.decode()
       if (!cancelled) imageUrl.value = image.src
     } catch (error) {
       if (cancelled) return
       imageUrl.value = ''
-      errorMessage.value = `画面资源加载失败：${scene.name}`
+      errorMessage.value = `画面资源加载失败：${id}`
       console.error(errorMessage.value, error)
     }
   },

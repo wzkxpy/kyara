@@ -271,6 +271,7 @@ const handleKeydown = (event: KeyboardEvent): void => {
   appearance: none;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   overflow: hidden;
   border: 1px solid rgba(84, 104, 255, 0.16);
   border-radius: 14px;
@@ -343,9 +344,12 @@ const handleKeydown = (event: KeyboardEvent): void => {
 
 .slot-label {
   margin: 0;
+  overflow: hidden;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .slot.is-empty .slot-label {

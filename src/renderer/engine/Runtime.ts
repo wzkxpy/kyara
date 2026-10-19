@@ -27,24 +27,24 @@ export class Runtime {
 
       switch (command.type) {
         case 'bg':
-          this.state.scene = { type: 'bg', name: command.name }
+          this.state.scene = { type: 'bg', name: command.name, diff: command.diff }
           this.state.characters = []
           break
 
         case 'cg':
-          this.state.scene = { type: 'cg', name: command.name }
+          this.state.scene = { type: 'cg', name: command.name, diff: command.diff }
           this.state.characters = []
           break
 
         case 'show': {
           const character = this.state.characters.find((item) => item.name === command.character)
-          // 同一角色再次出场时更新表情，保留原有站位。
+          // 同一角色再次出场时更新差分，保留原有站位。
           if (character) {
-            character.expression = command.expression
+            character.diff = command.diff
           } else {
             this.state.characters.push({
               name: command.character,
-              expression: command.expression
+              diff: command.diff
             })
           }
           break
@@ -97,23 +97,23 @@ export class Runtime {
       const command = this.commands[i]
       switch (command.type) {
         case 'bg':
-          replayed.scene = { type: 'bg', name: command.name }
+          replayed.scene = { type: 'bg', name: command.name, diff: command.diff }
           replayed.characters = []
           break
 
         case 'cg':
-          replayed.scene = { type: 'cg', name: command.name }
+          replayed.scene = { type: 'cg', name: command.name, diff: command.diff }
           replayed.characters = []
           break
 
         case 'show': {
           const character = replayed.characters.find((item) => item.name === command.character)
           if (character) {
-            character.expression = command.expression
+            character.diff = command.diff
           } else {
             replayed.characters.push({
               name: command.character,
-              expression: command.expression
+              diff: command.diff
             })
           }
           break

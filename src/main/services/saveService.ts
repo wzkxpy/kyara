@@ -34,14 +34,15 @@ function isSaveData(value: unknown): value is SaveData {
     (state.scene === null ||
       (isRecord(state.scene) &&
         (state.scene.type === 'bg' || state.scene.type === 'cg') &&
-        typeof state.scene.name === 'string')) &&
+        typeof state.scene.name === 'string' &&
+        typeof state.scene.diff === 'string')) &&
     (state.bgm === null || typeof state.bgm === 'string') &&
     Array.isArray(state.characters) &&
     state.characters.every(
       (character: unknown) =>
         isRecord(character) &&
         typeof character.name === 'string' &&
-        typeof character.expression === 'string'
+        typeof character.diff === 'string'
     ) &&
     (state.speaker === null || typeof state.speaker === 'string') &&
     typeof state.text === 'string' &&

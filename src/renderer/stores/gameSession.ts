@@ -1,12 +1,12 @@
 // src/renderer/stores/gameSession.ts
 import { defineStore } from 'pinia'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import type { Command } from '@shared/types/command'
 import type { GameState } from '@shared/types/state'
 import { getResourceUrl } from '@shared/resources'
 import { initState } from '../engine/GameState'
 import { Runtime } from '../engine/Runtime'
-import { AudioManager } from '../engine/AudioManager'
+import { AudioManager, type AudioVolumes } from '../engine/AudioManager'
 import { getCommands, DEFAULT_SCRIPT } from '../engine/ScriptRepository'
 import { useSettingsStore } from './settings'
 
@@ -16,6 +16,27 @@ export const useGameSessionStore = defineStore('gameSession', () => {
   const state = ref<GameState | null>(null)
   let runtime: Runtime | null = null
   let audio: AudioManager | null = null
+
+  const readVolumes = (): AudioVolumes => {
+    const settings = settingsStore.settings
+    return {
+      master: settings.masterVolume,
+      music: settings.musicVolume,
+      voice: settings.voiceVolume,
+      sfx: settings.sfxVolume
+    }
+  }
+
+  // 设置页调整音量时，实时应用到正在播放的音频
+  watch(
+    () => [
+      settingsStore.settings.masterVolume,
+      settingsStore.settings.musicVolume,
+      settingsStore.settings.voiceVolume,
+      settingsStore.settings.sfxVolume
+    ],
+    () => audio?.setVolumes(readVolumes())
+  )
 
   // 当前脚本命令，随 scriptId 更新
   const commands = computed<readonly Command[]>(() => {
@@ -27,8 +48,9 @@ export const useGameSessionStore = defineStore('gameSession', () => {
   function initSession(initialState: GameState): void {
     endGame()
     const gameState = reactive(initialState)
-    const audioManager = new AudioManager((type, name) =>
-      getResourceUrl(type === 'voice' ? 'voices' : type, name)
+    const audioManager = new AudioManager(
+      (type, name) => getResourceUrl(type === 'voice' ? 'voices' : type, name),
+      readVolumes()
     )
     const gameRuntime = new Runtime(
       getCommands(gameState.scriptId),

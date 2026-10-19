@@ -59,12 +59,12 @@ export function parse(source: string): Command[] {
 
       switch (directive) {
         case 'bg':
-          expectArgs(1)
-          commands.push({ type: 'bg', name: args[0] })
+          expectArgs(2)
+          commands.push({ type: 'bg', name: args[0], diff: args[1] })
           break
         case 'cg':
-          expectArgs(1)
-          commands.push({ type: 'cg', name: args[0] })
+          expectArgs(2)
+          commands.push({ type: 'cg', name: args[0], diff: args[1] })
           break
         case 'voice':
           expectArgs(1)
@@ -80,7 +80,11 @@ export function parse(source: string): Command[] {
           break
         case 'show':
           expectArgs(2)
-          commands.push({ type: 'show', character: args[0], expression: args[1] })
+          commands.push({ type: 'show', character: args[0], diff: args[1] })
+          break
+        case 'hide':
+          expectArgs(1)
+          commands.push({ type: 'hide', character: args[0] })
           break
         case 'load':
           expectArgs(1)

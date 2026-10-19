@@ -38,7 +38,17 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
-  // 更新单个设置项
+  // 仅更新本地状态，用于滑杆拖动时实时预览
+  function previewSetting<K extends keyof Settings>(key: K, value: Settings[K]): void {
+    settings.value[key] = value
+  }
+
+  // 将当前完整设置写回主进程
+  function persistSettings(): Promise<void> {
+    return saveSettings({ ...settings.value })
+  }
+
+  // 更新并持久化单个设置项
   function updateSetting<K extends keyof Settings>(key: K, value: Settings[K]): Promise<void> {
     return saveSettings({
       ...settings.value,
@@ -48,7 +58,8 @@ export const useSettingsStore = defineStore('settings', () => {
 
   // 恢复默认设置
   function resetSettings(): Promise<void> {
-    return saveSettings({ ...defaultAppSettings })
+    Object.assign(settings.value, defaultAppSettings)
+    return persistSettings()
   }
 
   return {
@@ -56,6 +67,8 @@ export const useSettingsStore = defineStore('settings', () => {
     isLoading,
     errorMessage,
     loadSettings,
+    previewSetting,
+    persistSettings,
     updateSetting,
     resetSettings
   }
