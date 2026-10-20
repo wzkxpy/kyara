@@ -1,6 +1,6 @@
 <!-- src/renderer/pages/GamePage.vue -->
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import GameScreen from '@renderer/components/GameScreen.vue'
@@ -14,6 +14,7 @@ import { useGameSessionStore } from '@renderer/stores/gameSession'
 import { useSaveLoad } from '@renderer/composables/useSaveLoad'
 
 import { collectHistory, type HistoryEntry } from '@renderer/lib/history'
+import { textCharIntervalMs } from '@renderer/lib/timing'
 
 import avatarImage from '../../../resources/images/characters/avatar-example.svg'
 
@@ -34,6 +35,11 @@ const isHistoryVisible = ref(false) // 历史记录 overlay 显示状态
 const historyEntries = shallowRef<HistoryEntry[]>([]) // 历史页快照，打开时重新生成
 const isDialogueVisible = ref(true) // 对话框显示状态
 
+// 自动模式状态与单计时器
+const isAutoActive = ref(false)
+let autoTimer: ReturnType<typeof setTimeout> | null = null
+let pendingVoiceAdvance = false // 自动计时已到点，等待语音播完
+
 // 快速存读档的二次确认弹窗
 const showQuickSaveConfirm = ref(false)
 const showQuickLoadConfirm = ref(false)
@@ -48,6 +54,81 @@ const toggleDialogueVisibility = (): void => {
   isDialogueVisible.value = !isDialogueVisible.value
 }
 
+// 自动模式基准与单字时长（1-100 指数映射）
+const AUTO_BASE_SLOWEST_MS = 1200
+const AUTO_BASE_FASTEST_MS = 250
+const AUTO_CHAR_SLOWEST_MS = 150
+const AUTO_CHAR_FASTEST_MS = 15
+const AUTO_MIN_POST_TEXT_MS = 300 // 文本显示完成后的最短停留
+const AUTO_VOICE_END_GAP_MS = 150 // 语音结束后的缓冲
+
+// 自动模式在这些状态下暂停计时
+const isAutoPaused = computed(
+  () =>
+    isCapturing.value ||
+    isHistoryVisible.value ||
+    !isDialogueVisible.value ||
+    showQuickSaveConfirm.value ||
+    showQuickLoadConfirm.value ||
+    pendingHistoryJump.value !== null
+)
+
+const clearAutoTimer = (): void => {
+  if (autoTimer !== null) {
+    clearTimeout(autoTimer)
+    autoTimer = null
+  }
+}
+
+const stopAuto = (): void => {
+  isAutoActive.value = false
+  pendingVoiceAdvance = false
+  clearAutoTimer()
+}
+
+// 自动节奏 = 基准 + 字数 × 单字时长，再与「打字完成 + 最短停留」取较大值
+const autoDelayMs = (): number => {
+  const chars = Array.from(gameState.value?.text ?? '').length
+  const speed = Math.min(100, Math.max(1, settings.value.autoSpeed))
+  const progress = (speed - 1) / 99
+  const autoBaseMs =
+    AUTO_BASE_SLOWEST_MS * (AUTO_BASE_FASTEST_MS / AUTO_BASE_SLOWEST_MS) ** progress
+  const autoCharMs =
+    AUTO_CHAR_SLOWEST_MS * (AUTO_CHAR_FASTEST_MS / AUTO_CHAR_SLOWEST_MS) ** progress
+  const textCharMs = textCharIntervalMs(settings.value.textSpeed)
+  return Math.max(autoBaseMs + chars * autoCharMs, chars * textCharMs + AUTO_MIN_POST_TEXT_MS)
+}
+
+const runAutoAdvance = (): void => {
+  if (!isAutoActive.value || isAutoPaused.value) return
+  if (session.isVoicePlaying) {
+    pendingVoiceAdvance = true
+    return
+  }
+  session.advance()
+}
+
+const scheduleAuto = (): void => {
+  clearAutoTimer()
+  pendingVoiceAdvance = false
+  if (!isAutoActive.value || isAutoPaused.value || gameState.value?.finished) return
+
+  autoTimer = setTimeout(() => {
+    autoTimer = null
+    runAutoAdvance()
+  }, autoDelayMs())
+}
+
+const toggleAuto = (): void => {
+  if (isAutoActive.value) {
+    stopAuto()
+    return
+  }
+  if (gameState.value?.finished) return
+  isAutoActive.value = true
+  scheduleAuto()
+}
+
 // 推进剧情：正在逐字显示时先补全文字，否则进入下一条剧情
 const advance = (): void => {
   if (isCapturing.value) return
@@ -56,6 +137,7 @@ const advance = (): void => {
     dialogueBox.finish()
     return
   }
+  pendingVoiceAdvance = false // 手动推进优先于等待语音
   session.advance()
 }
 
@@ -92,15 +174,20 @@ const handleWheel = (event: WheelEvent): void => {
   }
 }
 
-// 右键点击切换对话框显示状态
+// 右键：自动模式下退出自动，否则切换对话框显示状态
 const handleContextMenu = (event: MouseEvent): void => {
   event.preventDefault()
   if (isCapturing.value || isHistoryVisible.value) return
 
+  if (isAutoActive.value) {
+    stopAuto()
+    return
+  }
+
   toggleDialogueVisibility()
 }
 
-// 键盘事件：空格或回车推进剧情，Esc 关闭对话框或历史记录
+// 键盘事件：空格或回车推进剧情，Esc 退出自动/关闭历史/隐藏对话框
 const handleKeydown = (event: KeyboardEvent): void => {
   if (isCapturing.value) return
   if (
@@ -118,6 +205,10 @@ const handleKeydown = (event: KeyboardEvent): void => {
   }
 
   if (event.key === 'Escape') {
+    if (isAutoActive.value) {
+      stopAuto()
+      return
+    }
     if (isDialogueVisible.value) {
       isDialogueVisible.value = false
     }
@@ -139,7 +230,49 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  clearAutoTimer()
 })
+
+// 换行（含手动推进）时按新行重新计时
+watch(
+  () => gameState.value?.pc,
+  () => {
+    if (isAutoActive.value) scheduleAuto()
+  }
+)
+
+// 暂停状态变化：暂停时清计时，恢复后按当前行重算
+watch(isAutoPaused, (paused) => {
+  if (paused) {
+    clearAutoTimer()
+    pendingVoiceAdvance = false
+    return
+  }
+  scheduleAuto()
+})
+
+// 语音结束后执行挂起的推进
+watch(
+  () => session.isVoicePlaying,
+  (playing) => {
+    if (playing || !pendingVoiceAdvance) return
+    pendingVoiceAdvance = false
+    if (!isAutoActive.value || isAutoPaused.value) return
+    clearAutoTimer()
+    autoTimer = setTimeout(() => {
+      autoTimer = null
+      runAutoAdvance()
+    }, AUTO_VOICE_END_GAP_MS)
+  }
+)
+
+// 脚本播完后关闭自动
+watch(
+  () => gameState.value?.finished,
+  (finished) => {
+    if (finished) stopAuto()
+  }
+)
 
 const openHistory = (): void => {
   const current = gameState.value
@@ -159,6 +292,7 @@ const confirmHistoryJump = (): void => {
   pendingHistoryJump.value = null
   if (commandIndex === null) return
 
+  stopAuto()
   session.jumpTo(commandIndex)
   isHistoryVisible.value = false
 }
@@ -201,6 +335,7 @@ const quickSave = async (): Promise<void> => {
 // 快速读档：确认后就地恢复 0 号槽的会话状态
 const quickLoad = async (): Promise<void> => {
   showQuickLoadConfirm.value = false
+  stopAuto()
   isCapturing.value = true
   try {
     await loadGame(0)
@@ -215,6 +350,9 @@ const handleAction = (key: string): void => {
   if (isCapturing.value) return
   if (key === 'history') {
     openHistory()
+  }
+  if (key === 'auto') {
+    toggleAuto()
   }
   if (key === 'settings') {
     emit('settings')
@@ -260,6 +398,7 @@ const handleAction = (key: string): void => {
       >
         <GameActionBar
           :interactive="isDialogueVisible && !isHistoryVisible && !isCapturing"
+          :auto-active="isAutoActive"
           @action="handleAction"
         />
       </DialogueBox>

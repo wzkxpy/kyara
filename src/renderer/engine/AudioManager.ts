@@ -16,7 +16,8 @@ export class AudioManager {
 
   constructor(
     private resolveAudio: (type: AudioType, name: string) => string,
-    private volumes: AudioVolumes
+    private volumes: AudioVolumes,
+    private onVoiceChange?: (playing: boolean) => void
   ) {}
 
   // 音量变化时同步到正在播放的音频
@@ -96,6 +97,7 @@ export class AudioManager {
     const audio = this.createAudio('voice', name)
     if (!audio) return
     this.voice = audio
+    this.onVoiceChange?.(true)
 
     audio.onended = () => {
       if (this.voice === audio) this.stopVoice()
@@ -114,8 +116,10 @@ export class AudioManager {
 
   stopVoice(): void {
     const audio = this.voice
+    if (!audio) return
     this.voice = null
     this.releaseAudio(audio)
+    this.onVoiceChange?.(false)
   }
 
   // ---------- SFX ----------

@@ -21,7 +21,7 @@ export const defaultAppSettings: Settings = {
   displayMode: 'windowed',
   skipMode: 'readOnly',
   textSpeed: 50,
-  autoSpeed: 1,
+  autoSpeed: 40,
   dialogOpacity: 0.8,
   interruptSpeech: false,
   showAvatar: true,

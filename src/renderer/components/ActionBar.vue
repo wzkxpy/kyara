@@ -1,3 +1,4 @@
+<!-- src/renderer/components/ActionBar.vue -->
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { resolveUiAsset, type UiSlot } from '@renderer/lib/uiAssets'
@@ -26,10 +27,12 @@ interface GameAction {
 
 interface Props {
   interactive?: boolean
+  autoActive?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  interactive: true
+  interactive: true,
+  autoActive: false
 })
 
 const emit = defineEmits<{
@@ -165,11 +168,19 @@ watch(
           class="game-action"
           :class="{
             'pin-action': action.key === 'pinBar',
-            'is-active': action.key === 'pinBar' && isActionBarPinned
+            'is-active':
+              (action.key === 'pinBar' && isActionBarPinned) ||
+              (action.key === 'auto' && props.autoActive)
           }"
           type="button"
           :aria-label="action.label"
-          :aria-pressed="action.key === 'pinBar' ? isActionBarPinned : undefined"
+          :aria-pressed="
+            action.key === 'pinBar'
+              ? isActionBarPinned
+              : action.key === 'auto'
+                ? props.autoActive
+                : undefined
+          "
           @mouseenter="showActionHint(action.label)"
           @mouseleave="clearActionHint"
           @click="handleAction(action)"

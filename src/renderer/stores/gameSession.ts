@@ -14,6 +14,7 @@ export const useGameSessionStore = defineStore('gameSession', () => {
   const settingsStore = useSettingsStore()
 
   const state = ref<GameState | null>(null)
+  const isVoicePlaying = ref(false)
   let runtime: Runtime | null = null
   let audio: AudioManager | null = null
 
@@ -50,7 +51,10 @@ export const useGameSessionStore = defineStore('gameSession', () => {
     const gameState = reactive(initialState)
     const audioManager = new AudioManager(
       (type, name) => getResourceUrl(type === 'voice' ? 'voices' : type, name),
-      readVolumes()
+      readVolumes(),
+      (playing) => {
+        isVoicePlaying.value = playing
+      }
     )
     const gameRuntime = new Runtime(
       getCommands(gameState.scriptId),
@@ -96,6 +100,7 @@ export const useGameSessionStore = defineStore('gameSession', () => {
   return {
     state,
     commands,
+    isVoicePlaying,
     startGame,
     loadGame,
     advance,

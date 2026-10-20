@@ -23,6 +23,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { resolveUiAsset } from '@renderer/lib/uiAssets'
+import { textCharIntervalMs } from '@renderer/lib/timing'
 import { useTypewriter } from '@renderer/composables/useTypewriter'
 
 // 对话框框体通过 UI 资源槽位解析
@@ -43,13 +44,7 @@ const props = withDefaults(
   }
 )
 
-// 显示速度（1-100）指数映射为每字间隔毫秒数：每档约 +3.5% 速度，滑杆手感均匀
-const SLOWEST_INTERVAL_MS = 150 // speed=1：约 6.7 字/秒
-const FASTEST_INTERVAL_MS = 5 // speed=100：约 200 字/秒
-const intervalMs = computed(() => {
-  const speed = Math.min(100, Math.max(1, props.textSpeed))
-  return SLOWEST_INTERVAL_MS * (FASTEST_INTERVAL_MS / SLOWEST_INTERVAL_MS) ** ((speed - 1) / 99)
-})
+const intervalMs = computed(() => textCharIntervalMs(props.textSpeed))
 
 const { displayedText, isTyping, start, finish } = useTypewriter(intervalMs)
 
